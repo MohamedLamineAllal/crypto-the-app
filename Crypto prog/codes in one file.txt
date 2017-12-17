@@ -1,0 +1,4344 @@
+
+/////////////////////////////////////////////////
+// squar and multiply
+///////////////////////////////////////////////////////////////////
+BigInteger powSM(BigInteger a, BigInteger b) 
+{
+  String bBinaryStr = b.toString(2); // 2 pour dire en base 2
+      BigInteger aPOWb= BigInteger.valueOf(1); //aPOWb = 1
+      for(int i=0; i<bBinaryStr.length()&& !Thread.currentThread().isInterrupted();i++)   // pour i parcourant toute la chaine de la représentation binaire de b
+      {
+          if(bBinaryStr.charAt(i)=='1') // si le bit est 1 alors SM
+          {
+          aPOWb= aPOWb.multiply(aPOWb);  // squar
+           aPOWb= aPOWb.multiply(a); // multiply
+          }
+          else aPOWb= aPOWb.multiply(aPOWb);  //sinon 0 et donc squar
+      }
+return aPOWb; // en sortie le BigInteger qui represente a^b
+}
+
+BigInteger modPowSM(BigInteger a, BigInteger b, BigInteger m) 
+{
+  String bBinaryStr = b.toString(2); // 2 pour dire en base 2
+      BigInteger aPOWb= BigInteger.valueOf(1); //aPOWb = 1
+      for(int i=0; i<bBinaryStr.length();i++)   // pour i parcourant toute la chaine de la représentation binaire de b
+      {
+          if(bBinaryStr.charAt(i)=='1') // si le bit est 1 alors SM
+          {
+          aPOWb= aPOWb.multiply(aPOWb);  // squar
+          aPOWb=aPOWb.mod(m); //  reduir aPOWb modulo m
+           aPOWb= aPOWb.multiply(a); // multiply
+            aPOWb=aPOWb.mod(m); //  reduir aPOWb modulo m
+          }
+          else  //sinon 0 et donc squar
+          {
+                aPOWb= aPOWb.multiply(aPOWb);
+               aPOWb=aPOWb.mod(m); //  reduir aPOWb modulo m
+          } 
+      }
+return aPOWb; // en sortie le BigInteger qui represente a^b
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////
+// test de primalité de Fermat
+////////////////////////////////////////////////////////////////////////////////////////////////////
+public boolean pseudoPrimTest(BigInteger nbr)
+{
+    if(modPowSM(BigInteger.valueOf(2), nbr.subtract(BigInteger.ONE) , nbr).equals(BigInteger.ONE)) 
+// si 2^(nbr-1)=1 (mod nbr)
+    return true; // nbr premier
+    else return false; //sinon  composé
+}
+
+
+
+
+//////////////////////////////////
+//Miller Rabin test
+/////////////////////////////////////
+
+class pair2POWtU {
+    private
+    BigInteger t; // t telque 2^t.u
+     BigInteger u;
+     
+  public
+       pair2POWtU(BigInteger nbr) {
+        t = BigInteger.ZERO;
+        u=nbr;
+            while(u.mod(BigInteger.valueOf(2)).equals(BigInteger.ZERO) ) //tant que  u mod 2 = 0 
+            {
+                u=u.divide(BigInteger.valueOf(2));
+                t=t.add(BigInteger.ONE);
+            }
+            
+        }
+     
+  BigInteger getT(){
+      return t;
+  }   
+  
+ BigInteger getU(){
+      return u;
+  }   
+        
+        
+}
+
+ 
+
+public boolean Temoin(BigInteger nbr, BigInteger base )
+{
+   pair2POWtU frm2PWtU = new  pair2POWtU(nbr.subtract(BigInteger.ONE));
+   
+    ///////////////
+   BigInteger x = modPowSM(base,frm2PWtU.getU() ,nbr ); // base^u mod nbr
+    ///////////////
+   
+   BigInteger i = BigInteger.ZERO;
+   BigInteger xLast;
+   
+   while (i.compareTo(frm2PWtU.getT())<0) //repeter t fois 
+   {   xLast =x;
+       x= modPowSM(x, BigInteger.valueOf(2), nbr);
+       
+        ///////////////
+       if(x.equals(BigInteger.ONE)&& 
+               !(xLast.equals(BigInteger.ONE)) && !(xLast.equals(nbr.subtract(BigInteger.ONE))))
+                return true;
+        ///////////////
+       
+       i=i.add(BigInteger.ONE);
+   }
+   
+   
+     ///////////////
+       if(!(x.equals(BigInteger.ONE)))
+       return true;
+     ///////////////  
+       
+       return false;
+           
+   
+}
+
+
+
+///////////////////////////////////////////////////////
+public  BigInteger randomBI(BigInteger maxNum) {
+    Random rnd = new Random();
+    int maxNumBitLength = maxNum.bitLength();
+    BigInteger rndNum;
+    do {
+        rndNum = new BigInteger(maxNumBitLength, rnd);
+    } while(rndNum.compareTo(maxNum) >= 0);
+    return rndNum;
+}
+
+public  BigInteger randomBI(BigInteger minNum, BigInteger maxNum) {
+    BigInteger diffr = maxNum.subtract(minNum);
+    
+    return randomBI(diffr).add(minNum) ;
+}
+
+///////////////////////////////////////////////////////////////
+
+
+
+
+
+public boolean isPrimMR(BigInteger nbr, int s) // s est le nommbre de base à tester
+{BigInteger base ;
+ for (int i=1; i<=s; i++)   
+ {
+     base = randomBI(BigInteger.ONE,nbr.subtract(BigInteger.ONE)); // base = random(1,nbr-1)
+     if(Temoin(nbr, base))
+         return false;
+ }
+       // si la fonction ne temoine pas à la composition dans aucune base alors nbr est premier (prob)
+ return true; 
+}
+         /////////////////////////////////////////////////////////////////////////
+         
+         
+		 
+		 
+		 
+ //////////////////////////////////////////////////////////////////
+// génération de nombre premier		
+////////////////////////////////////////////////////////////////////////////////
+
+public BigInteger generatePrimPPTalea(int bitLenght)
+{
+    BigInteger generatedNum= randomBI(bitLenght);
+    
+   
+    
+ while(!pseudoPrimTest(generatedNum)&& !Thread.currentThread().isInterrupted())  // tanque non premier 
+ { 
+    generatedNum= randomBI(bitLenght); // generer un autre nombre pour le tester
+    
+    if(generatedNum.mod(BigInteger.valueOf(2)).equals(BigInteger.ZERO)) // s'il est pair
+            generatedNum.add(BigInteger.ONE); // ajouter un pour le rend impair                           
+ }
+ 
+ return generatedNum;
+}
+
+
+public BigInteger generatePrimPPTnxt(int bitLenght)
+{
+    BigInteger generatedNum= randomBI(bitLenght);
+    
+    /* if(generatedNum.mod(BigInteger.valueOf(2)).equals(BigInteger.ZERO)) // s'il est pair
+            generatedNum.add(BigInteger.ONE); // ajouter un pour le rend impair
+     */
+ while(!pseudoPrimTest(generatedNum)&& !Thread.currentThread().isInterrupted())  // tanque non premier 
+ {
+    generatedNum= generatedNum.add(BigInteger.valueOf(1)); // generatedNum = generatedNum + 2;
+ }
+ 
+ return generatedNum;
+}
+
+
+	
+
+
+
+	
+	
+	
+	
+	
+	///////////////////////////////////////////////////////
+public  BigInteger randomBI(BigInteger maxNum) {
+    Random rnd = new Random();
+    int maxNumBitLength = maxNum.bitLength();
+    BigInteger rndNum;
+    do {
+        rndNum = new BigInteger(maxNumBitLength, rnd);
+    } while(rndNum.compareTo(maxNum) >= 0&& !Thread.currentThread().isInterrupted());
+    return rndNum;
+}
+
+public  BigInteger randomBI(BigInteger minNum, BigInteger maxNum) {
+    BigInteger diffr = maxNum.subtract(minNum);
+    
+    return randomBI(diffr).add(minNum) ;
+}
+
+
+public BigInteger randomBI(int bitLenght)
+{
+    return randomBI(powSM(BigInteger.valueOf(2), BigInteger.valueOf(bitLenght-1)),
+            powSM(BigInteger.valueOf(2), BigInteger.valueOf(bitLenght)).subtract(BigInteger.ONE) );
+    
+}
+///////////////////////////////////////////////////////////////
+
+
+	
+	  public BigInteger generatePrimMRTalea(int bitLenght,int certitude)
+{
+    BigInteger generatedNum= randomBI(bitLenght);
+    
+   
+    
+ while(!isPrimMR(generatedNum,certitude)&& !Thread.currentThread().isInterrupted())  // tanque non premier 
+ { 
+    generatedNum= randomBI(bitLenght); // generer un autre nombre pour le tester
+    
+   // ajouter un pour le rend impair                           
+ }
+ 
+ return generatedNum;
+}
+
+
+public BigInteger generatePrimMRTnxt(int bitLenght,int certitude)
+{
+    BigInteger generatedNum= randomBI(bitLenght);
+    
+     if(generatedNum.mod(BigInteger.valueOf(2)).equals(BigInteger.ZERO)) // s'il est pair
+            generatedNum.add(BigInteger.ONE); // ajouter un pour le rend impair
+     
+ while(!isPrimMR(generatedNum,certitude)&& !Thread.currentThread().isInterrupted())  // tanque non premier 
+ {
+    generatedNum= generatedNum.add(BigInteger.valueOf(2)); // generatedNum = generatedNum + 2;
+ }
+ 
+ return generatedNum;
+}
+   
+
+
+
+
+
+	
+		 
+		 
+/////////////////////////////////////////////////////////////////////		 
+		 
+//pgcd et euclide 		 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+public BigInteger pgcdEuclideR(BigInteger a,BigInteger b)
+{      a=a.abs();   // a=|a|
+         b=b.abs();  //b=|b|
+         
+	if(b.equals(BigInteger.valueOf(0))) 
+            	return a;       // b=0  ==> pgcd(a,b) = a
+        else return pgcdEuclide(b,a.mod(b)); // pgcd(a,b)=pgcd(b,a mod b)
+}                                    // si b>a alors b'=a mod b = a et a' =b il s'inverse
+
+public BigInteger pgcdEuclide(BigInteger a,BigInteger b)
+{
+	BigInteger temp;
+        a=a.abs();   // a=|a|
+         b=b.abs();  //b=|b|
+    if(a.compareTo(b)<0)
+    {
+        while(!(a.equals(BigInteger.valueOf(0)))){
+            temp = a;
+            
+            a=b.mod(a);
+            
+            b=temp;
+        }
+        
+        return b;
+    }        else{
+                 while(!(b.equals(BigInteger.valueOf(0)))){
+            temp = b;
+            
+            b=a.mod(b);
+            
+            a=temp;
+        }
+        
+        return a;
+                }
+}
+
+
+
+
+
+class EuclideEtenduTRIPLE {
+    private 
+    BigInteger d;//pgcd
+    BigInteger x;// bizout coeficient 1
+    BigInteger y;// bizout coeficient
+    
+    public
+            EuclideEtenduTRIPLE(BigInteger D, BigInteger X, BigInteger Y)
+            {
+                d=D;
+                x=X;
+                y=Y;
+            }
+            
+    BigInteger getPgcd(){
+            return d;
+    }
+    BigInteger getX(){
+            return x;
+    }
+    BigInteger getY(){
+            return y;
+    }
+    
+    void setPgcd(BigInteger D){
+            d=D;
+    }
+    void setX(BigInteger X){
+          x=X;
+    }
+    void setY(BigInteger Y){
+         y=Y;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////
+public EuclideEtenduTRIPLE EuclideEtenduPos(BigInteger a,BigInteger b)
+{
+    EuclideEtenduTRIPLE temp;
+	if(b.equals(BigInteger.valueOf(0))) //si b==0
+            return new EuclideEtenduTRIPLE(a,BigInteger.ONE,BigInteger.ZERO); // retourner (a,1,0)  // (pgcd,x,y)
+        else{// sinon
+            temp = EuclideEtendu(b, a.mod(b)); // (d',x',y')= EuclideEtendu(b, a mod b )
+            return new EuclideEtenduTRIPLE(temp.getPgcd(),temp.y,temp.x.subtract(a.divide(b).multiply(temp.y))); 
+        } //retourner (d',y',x'-[a/b]*y')
+        
+        
+}
+
+
+public EuclideEtenduTRIPLE EuclideEtendu(BigInteger a,BigInteger b)
+{
+    EuclideEtenduTRIPLE euclideTriple = EuclideEtenduPos(a.abs(),b.abs()); //(d,x,y)=EuclideEtenduPosi(|a|,|b|)
+    if(a.signum()==-1)
+     euclideTriple.setX(euclideTriple.getX().negate());
+    if(b.signum()==-1)
+     euclideTriple.setY(euclideTriple.getY().negate());
+    
+    return euclideTriple;
+}
+
+public BigInteger InvMod(BigInteger a,BigInteger m)
+{
+    EuclideEtenduTRIPLE tripleEuclide = EuclideEtendu(a, m);
+    
+    if(!(tripleEuclide.getPgcd().equals(BigInteger.ONE)) )
+    return null;
+    else return tripleEuclide.getX().mod(m);
+}
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Crypto classique
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   
+   ////////////////////////////////////////////////////////////////////////////
+  //  chiffrement Cesar
+   //////////////////////////////////////////////////////////////////////////
+    public String chiffrementCesar(String claire, int cle){
+    String chiffre = "";
+        for(int i = 0 ; i< claire.length() ; i++) {
+             chiffre = chiffre  + String.valueOf((char) (Math.floorMod(claire.charAt(i)-65+cle, 26)+65));
+             }  
+        return chiffre;
+    }
+    
+    public String dechiffrementCesar(String chiffre, int cle){
+    String claire = "";
+        for(int i = 0 ; i < chiffre.length() ; i++) {
+             claire = claire  + String.valueOf((char) (Math.floorMod(chiffre.charAt(i)-65-cle, 26)+65));
+             }  
+        return claire;
+    }
+    
+
+
+   
+   
+   
+   
+   //////////////////////////////////////////////////////
+   //chiffrement Affine
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////   
+        public String chiffrementAffine(String claire, int k1, int k2){
+    String chiffre = "";
+        for(int i = 0 ; i< claire.length() ; i++) {
+             chiffre = chiffre  + String.valueOf((char) (Math.floorMod((claire.charAt(i)-65)*k1+k2, 26)+65));
+             }  
+        return chiffre;
+    }
+    
+    public String dechiffrementAffine(String chiffre, int k1, int k2){
+    String claire = "";
+        for(int i = 0 ; i < chiffre.length() ; i++) {
+             claire = claire  + String.valueOf((char) (Math.floorMod(((chiffre.charAt(i)-65)-k2)
+                     *BigInteger.valueOf(k1).modInverse(BigInteger.valueOf(26)).intValue(), 26)+65));
+             }  
+        return claire;
+    }
+    
+   
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+    // cryptosystème playfaire
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+     public char[][] stringToKeyPlayfaire(String cle){
+      char[][] matriceCle =  new char[5][5];
+      int k =0;
+         ArrayList<Character> tookenChars = new ArrayList<Character>() ;
+    boolean found;
+    String newCle = "";
+    for(int i = 0; i<cle.length();i++ )
+    { if(cle.charAt(i)=='J')
+        newCle = newCle+"I";
+    else
+        newCle = newCle + String.valueOf(cle.charAt(i));
+        
+        }
+    
+      for(int i = 0 ; i< newCle.length() && k<25 ;  i++){
+         found = false;
+          for(int j =0; j< tookenChars.size();j++){
+              if(newCle.charAt(i) == tookenChars.get(j))
+              { 
+                  found = true;
+                  break;
+              }
+              
+          }
+          if(!found){
+             matriceCle[Math.floorDiv(k,5)][Math.floorMod(k,5)]=newCle.charAt(i);
+             k++;
+             tookenChars.add(newCle.charAt(i));
+          }
+      }
+      if(k<25){
+          for(int i = 0;i<26 &&k<25 ; i++){
+              if(i!=9){
+                  found = false;
+              for(int j = 0; j<tookenChars.size();j++){
+                  if((char)(i+65) == tookenChars.get(j))
+                  {
+                      found = true;
+                      break;
+                  }
+              }
+              
+              if(!found)
+              {
+             matriceCle[Math.floorDiv(k,5)][Math.floorMod(k,5)]=(char)(i+65);
+             k++;
+             tookenChars.add((char)(i+65));
+              }
+          }
+          }
+      }
+        return matriceCle; 
+         
+     }
+     
+     
+     public String showKey(char[][] cle){
+         String result="";
+         for(int i = 0; i<5 ;i++){
+             for(int j = 0; j<5 ; j++){
+                 result=result+cle[i][j]+" ";
+             }
+             result = result + "\n";
+         }
+         return result;
+     }
+     
+     //rule 1:
+    public String chiffrementPlayfaireR1(String claire){
+         String resultat="";
+       int i = 0, j = 0 ; // j is for indexing the digramme start
+
+         for( i = 0 ; i<claire.length()-1; i++ ){
+             if(i==j && claire.charAt(i) == claire.charAt(i+1)&& claire.charAt(i)!='X' )
+             { resultat = resultat + String.valueOf(claire.charAt(i)) + "X";
+               j = i+1;
+              }
+             
+             else if(i==j && claire.charAt(i) == claire.charAt(i+1)&& claire.charAt(i)=='X')
+                  { resultat = resultat + String.valueOf(claire.charAt(i)) + "Y";
+                  j=i+1;                  
+                  }
+             else{
+                 if(i-j==1)
+                {resultat = resultat + String.valueOf(claire.charAt(i));
+                 j=i+1;                 }
+                 else 
+               resultat = resultat + String.valueOf(claire.charAt(i));  
+                 }    
+               
+         }
+         System.out.print("gota here first for");
+         if(i-j==1)
+           resultat = resultat + String.valueOf(claire.charAt(i));  
+         else  
+              resultat = resultat + String.valueOf(claire.charAt(i))+"X";
+           System.out.print("gota result= << " + resultat + " >>" );
+         return resultat;
+     }
+   
+     //rule 2:
+   public  String chiffrementPlayfaireR2R3R4(char b1, char b2, char[][] cle){
+
+         int b1RowIndex = -1 ;
+         int b1ColumnIndex = -1;
+         
+         int b2RowIndex = -1;
+         int b2ColumnIndex = -1;
+         
+for (int i=0; i < cle.length ;i++ ){
+    for(int j =0; j< cle[0].length; j++){
+       if(b2RowIndex != -1 && b1RowIndex != -1) 
+           break;
+       else{
+           if(cle[i][j] == b1|| (b1== 'J' && cle[i][j]== 'I'))
+           {
+               b1RowIndex = i;
+               b1ColumnIndex = j;
+               System.out.print("gotIndex b1 i = "+i + "  j= "+j);
+           }
+           else if(cle[i][j] == b2 || (b2 == 'J' && cle[i][j]== 'I'))
+           {
+             b2RowIndex = i;
+               b2ColumnIndex = j;  
+                System.out.print("gotIndex b2 i = "+i + "  j= "+j);
+           }
+       }
+    }
+}  
+
+if(b1RowIndex == b2RowIndex ){ // cas regle 2 meme ligne
+    System.out.println("thats the outPuthehehe : "+String.valueOf(cle[b1RowIndex][Math.floorMod(b1ColumnIndex+1, cle[0].length)])
+           +String.valueOf(cle[b2RowIndex][Math.floorMod(b2ColumnIndex+1, cle[0].length)]));
+    
+    return String.valueOf(cle[b1RowIndex][Math.floorMod(b1ColumnIndex+1, cle[0].length)])
+           +String.valueOf(cle[b2RowIndex][Math.floorMod(b2ColumnIndex+1, cle[0].length)]);
+     }
+
+else if(b1ColumnIndex == b2ColumnIndex){ // cas regle 3 meme cologne
+   return String.valueOf(cle[Math.floorMod(b1RowIndex+1, cle.length)][b1ColumnIndex])
+           +String.valueOf(cle[Math.floorMod(b2RowIndex+1, cle.length)][b2ColumnIndex]); 
+}
+else{
+    return String.valueOf(cle[b1RowIndex][b2ColumnIndex])
+           +String.valueOf(cle[b2RowIndex][b1ColumnIndex]); 
+}
+} 
+     
+ 
+public String chiffrementPlayfaire(String claire, char[][] cle)     
+{
+     String chiffre = "";
+     claire = chiffrementPlayfaireR1(claire);
+     System.out.println("the result calire = << "+claire+" >>");
+     for(int i = 1; i < claire.length(); i=i+2){
+      chiffre = chiffre + chiffrementPlayfaireR2R3R4(claire.charAt(i-1), claire.charAt(i), cle);
+     }
+    return chiffre; 
+     
+}
+  
+
+ public String dechiffrementPlayfaireR2R3R4(char b1, char b2, char[][] cle){
+
+         int b1RowIndex = -1 ;
+         int b1ColumnIndex = -1;
+         
+         int b2RowIndex = -1;
+         int b2ColumnIndex = -1;
+         
+for (int i=0; i < cle.length ;i++ ){
+    for(int j =0; j< cle[0].length; j++){
+       if(b2RowIndex != -1 && b1RowIndex != -1) 
+           break;
+       else{
+           if(cle[i][j] == b1)
+           {
+               b1RowIndex = i;
+               b1ColumnIndex = j;
+           }
+           else if(cle[i][j] == b2)
+           {
+             b2RowIndex = i;
+               b2ColumnIndex = j;  
+           }
+       }
+    }
+}  
+
+if(b1RowIndex == b2RowIndex ){ // cas regle 2 meme ligne
+    return String.valueOf(cle[b1RowIndex][Math.floorMod(b1ColumnIndex-1, cle[0].length)])
+           +String.valueOf(cle[b2RowIndex][Math.floorMod(b2ColumnIndex-1, cle[0].length)]);
+     }
+else if(b1ColumnIndex == b2ColumnIndex){ // cas regle 3 meme cologne
+   return String.valueOf(cle[Math.floorMod(b1RowIndex-1, cle.length)][b1ColumnIndex])
+           +String.valueOf(cle[Math.floorMod(b2RowIndex-1, cle.length)][b2ColumnIndex]); 
+}
+else{
+    return String.valueOf(cle[b1RowIndex][b2ColumnIndex])
+           +String.valueOf(cle[b2RowIndex][b1ColumnIndex]); 
+}
+} 
+ 
+ 
+ 
+public String dechiffrementPlayfaire(String chiffre, char[][] cle)     
+{
+     String claire = "";
+         
+     for(int i = 1; i < chiffre.length(); i=i+2){
+      claire = claire + dechiffrementPlayfaireR2R3R4(chiffre.charAt(i-1), chiffre.charAt(i), cle);
+     }
+    return claire; 
+     
+} 
+ 
+ 
+
+
+ 
+ 
+ 
+ 
+ 
+ /////////////////////////////////////////////////////////////////////////////////////////////////////
+ // Chiffrement de Hill
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+public int determinant(int[][] matrix){ //method takes a matrix (two dimensional array), returns determinant.
+    int sum=0; 
+    int s;
+    if(matrix.length==1){  //bottom case of recursion. size 1 matrix determinant is itself.
+      return(matrix[0][0]);
+    }
+    for(int i=0;i<matrix.length;i++){ //finds determinant using row-by-row expansion
+      int[][]smaller= new int[matrix.length-1][matrix.length-1]; //creates smaller matrix- values not in same row, column
+      for(int a=1;a<matrix.length;a++){
+        for(int b=0;b<matrix.length;b++){
+          if(b<i){
+            smaller[a-1][b]=matrix[a][b];
+          }
+          else if(b>i){
+            smaller[a-1][b-1]=matrix[a][b];
+          }
+        }
+      }
+      if(i%2==0){ //sign changes based on i
+        s=1;
+      }
+      else{
+        s=-1;
+      }
+      sum+=s*matrix[0][i]*determinant(smaller); // recursive step: determinant of larger determined by smaller.
+    }
+    return(sum); //returns determinant value. once stack is finished, returns final determinant.
+  }
+
+
+
+//  inversement d'une matrice la methode de gauss (modulo N)
+
+public int[][] permuterLignes(int ligne1Index,int ligne2Index, int[][] matrice){
+int temp;
+    for(int i = 0; i<matrice[0].length; i++){
+     temp = matrice[ligne1Index][i];
+     matrice[ligne1Index][i] = matrice[ligne2Index][i];
+     matrice[ligne2Index][i] = temp;
+ }   
+    return matrice;
+}
+
+public int[][] inverseMatrix(int[][] matrice,int modulo){
+    //matrice identité
+    int[][] inverseMatrix = new int[matrice.length][matrice.length];
+    for(int i =0;i<matrice.length; i++){
+       for(int j=0; j<matrice.length; j++){
+           if(i==j)
+               inverseMatrix[i][j]=1;
+           else
+               inverseMatrix[i][j]=0;
+       }
+    }
+    
+    //
+    for(int i = 0; i<matrice.length-1; i++)// for each pivot
+    {
+        if(matrice[i][i]==0){ // si le pivot n'est pas un pivot (zero)
+          boolean  notInversible = true;
+            for(int k = i+1; k<matrice.length && notInversible==true; k++){
+             if(matrice[k][i]!=0)  
+             {
+                matrice = permuterLignes(i,k, matrice);
+                inverseMatrix = permuterLignes(i, k, inverseMatrix);
+                
+                // operation lignes 
+                for(int l = i+1; l<matrice.length; l++){
+                   for(int m = 0; m<matrice.length; m++){
+                     matrice[l][m]=matrice[l][m]-matrice[l][i] * (BigInteger.valueOf(matrice[i][i]).modInverse(BigInteger.valueOf(modulo)).intValue())*matrice[i][m];
+                     inverseMatrix[l][m]=inverseMatrix[l][m]-matrice[l][i] * (BigInteger.valueOf(matrice[i][i]).modInverse(BigInteger.valueOf(modulo)).intValue())*inverseMatrix[i][m];
+                     
+                   }
+                     notInversible = false;
+                }
+               
+                
+             }
+           } 
+        }else{
+            
+            
+            for(int l = i+1; l<matrice.length; l++){
+                   for(int m = 0; m<matrice.length; m++){
+                     matrice[l][m]=matrice[l][m]-matrice[l][i] * (BigInteger.valueOf(matrice[i][i]).modInverse(BigInteger.valueOf(modulo)).intValue())*matrice[i][m];
+                     inverseMatrix[l][m] = inverseMatrix[l][m]-matrice[l][i] * (BigInteger.valueOf(matrice[i][i]).modInverse(BigInteger.valueOf(modulo)).intValue())*inverseMatrix[i][m];
+                     
+                   }
+        }
+    }
+    
+}
+    if(matrice[matrice.length-1][matrice.length-1] != 1)
+    {
+        matrice[matrice.length-1][matrice.length-1] = matrice[matrice.length-1][matrice.length-1] * BigInteger.valueOf(matrice[matrice.length-1][matrice.length-1]).modInverse(BigInteger.valueOf(modulo)).intValue();
+        inverseMatrix[matrice.length-1][matrice.length-1] = inverseMatrix[matrice.length-1][matrice.length-1] * BigInteger.valueOf(matrice[matrice.length-1][matrice.length-1]).modInverse(BigInteger.valueOf(modulo)).intValue();
+      
+    }
+
+ 
+ return inverseMatrix;
+}
+
+public  int[] chiffrementHillVect(int[] vectClaire, int[][] cle ){
+  int[] vectChiffre = new int[vectClaire.length];
+  for(int i =0; i<vectClaire.length; i++){
+      for(int j=0; j<vectClaire.length; j++){
+          vectChiffre[i]=Math.floorMod(vectClaire[j]*cle[i][j],26);
+      }
+  }
+  return vectChiffre;  
+  }  
+  
+public  int[] dechiffrementHillVect(int[] vectChiffre, int[][] cleInv ){
+  int[] vectClaire = new int[vectChiffre.length];
+  for(int i =0; i<vectChiffre.length; i++){
+      for(int j=0; j<vectChiffre.length; j++){
+          vectClaire[i]=Math.floorMod(vectChiffre[j]*cleInv[i][j],26);
+      }
+  }
+  return vectClaire;  
+  }
+
+public String chiffrementHill(String claire, int[][] cle){
+ int enPlus = Math.floorMod(claire.length(), cle.length);
+ String chiffre = "";  
+ if(enPlus !=0){// taille du claire non multiple de de la taille du bloque
+       for(int i =0; i<cle.length-enPlus; i++ )
+           claire = claire + "Z";    // padding (completer)
+       
+       int[] vectClaire = new int[cle.length];
+       int k ;
+       
+       int[] vectChiffre = new int[cle.length];
+       
+       for(int i = 0; i< Math.floorDiv(claire.length(), cle.length);i++){
+         k=0;
+           for(int j =i*cle.length; j<(i+1)*cle.length;j++){
+             vectClaire[k]=(int) (claire.charAt(j)-65);
+             k++;
+         }  
+          vectChiffre = chiffrementHillVect(vectClaire, cle);
+          for(int l=0; l<vectChiffre.length; l++){
+              chiffre = chiffre +String.valueOf((char)(vectChiffre[l]+65));
+          }
+       }
+       return chiffre;
+   }
+    else{
+       
+       
+       int[] vectClaire = new int[cle.length];
+       int k ;
+       
+       int[] vectChiffre = new int[cle.length];
+       
+       for(int i = 0; i< Math.floorDiv(claire.length(), cle.length);i++){
+         k=0;
+           for(int j =i*cle.length; j<(i+1)*cle.length;j++){
+             vectClaire[k]=(int) (claire.charAt(j)-65);
+             k++;
+         }  
+          vectChiffre = chiffrementHillVect(vectClaire, cle);
+          for(int l=0; l<vectChiffre.length; l++){
+              chiffre = chiffre +String.valueOf((char)(vectChiffre[l]+65));
+          }
+       }
+       return chiffre;
+    }
+ }
+
+public String dechiffrementHill(String chiffre, int[][] cle){
+     return chiffrementHill(chiffre, cle);
+ }
+
+
+
+
+
+
+
+ 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+	//chiffrement de Vignere
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+    public String chiffrementVignere(String claire , String cle )
+    {String chiffre = "" ;
+           
+        for(int i = 0; i < claire.length() ; i++ ){
+            chiffre = chiffre + String.valueOf((char) (Math.floorMod((claire.charAt(i)-65+cle.charAt(Math.floorMod(i, cle.length()))-65),26)+65));
+        }
+        return chiffre;
+    }
+    
+     public String dechiffrementVignere(String chiffre , String cle )
+    {String claire = "" ;
+           
+        for(int i = 0; i < chiffre.length() ; i++ ){
+            claire = claire + String.valueOf((char) (Math.floorMod( ( chiffre.charAt(i)-65-(cle.charAt(Math.floorMod(i, cle.length()))-65)) , 26 ) + 65));
+        }
+        return claire;
+    }
+     
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+///////////////////////////////////////////////////////////////////////////////////////////////////////	
+	
+//Crypto moderne
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+//RSA
+///////////////////////////////////////////////////////////////////////////////////////////     
+     
+    public BigInteger chiffrementRSA(BigInteger numToCrypt, BigInteger exposantPublic, BigInteger module)
+{
+	return numToCrypt.modPow(exposantPublic, module);
+	
+}
+ 
+       public String chiffrementRSA(String claire, BigInteger exposantPublic, BigInteger module)
+{
+String chiffre = "";
+for(int i = 0; i< claire.length(); i++){
+    chiffre = chiffre + chiffrementRSA(module.subtract(BigInteger.valueOf((int) claire.charAt(i))), exposantPublic, module).toString()+" "; // x ===> N-x , y = rsa(N-x);  
+} 
+
+return chiffre;    
+	
+}
+  
+  
+  
+    public BigInteger restesChinois(List<BigInteger> a ,List<BigInteger> n,BigInteger N)
+    {
+        int sizeA= a.size(); 
+        BigInteger x=BigInteger.ZERO; BigInteger c_i; 
+        for(int i = 0; i<sizeA; i++)
+        {
+            c_i = N.divide(n.get(i)).multiply(N.divide(n.get(i)).modInverse(N));
+            x=x.add(c_i.multiply(a.get(i)));
+        }
+        return x;
+    }
+    
+    public BigInteger restesChinois(BigInteger a_1,BigInteger a_2, BigInteger p ,BigInteger q,BigInteger N)
+    {
+                  
+         return N.divide(p).multiply(N.divide(p).modInverse(N)).multiply(a_1).add(
+               N.divide(q).multiply(N.divide(q).modInverse(N)).multiply(a_2)  );    
+    }
+    
+        public BigInteger dechiffrementRSA(BigInteger numToDeCrypt, BigInteger exposantPrive, BigInteger module)
+{
+    
+   	return numToDeCrypt.modPow(exposantPrive, module);
+	
+}
+  
+        public String dechiffrementRSA(String chiffre, BigInteger exposantPrive, BigInteger module)
+{
+String claire = "";
+
+int j = 0;
+int chiffreLength = chiffre.length();
+
+for(int i = 1; i<chiffreLength ; i++){
+    if(chiffre.charAt(i)!=' ' && chiffre.charAt(i-1)==' ')
+        j = i;
+    else if((chiffre.charAt(i)==' ' && chiffre.charAt(i-1)!=' ')){
+     claire = claire + String.valueOf((char) dechiffrementRSA(new BigInteger(chiffre.substring(j, i)), exposantPrive, module).subtract(module).negate().intValue()) ; // y=rsa(N-x) ===> rsa-1(y)= N-x ====> -x =====> x  
+} 
+    else if((chiffre.charAt(i)!=' '&& i == chiffreLength-1))
+     claire = claire + String.valueOf((char) dechiffrementRSA(new BigInteger(chiffre.substring(j)), exposantPrive, module).subtract(module).negate().intValue()) ;
+    
+}
+return claire;    
+	
+}
+   
+        public BigInteger dechiffrementRSA_CRT(BigInteger chiffre, BigInteger p, BigInteger q,BigInteger d_p, BigInteger d_q, BigInteger qInv )
+        {BigInteger x_1 =chiffre.modPow(d_p,p);
+          BigInteger x_2 =chiffre.modPow(d_q,q); 
+          
+         return x_1.subtract(x_2).multiply(qInv).mod(p).multiply(q).add(x_2);
+        }
+     
+      public String dechiffrementRSA_CRT(String chiffre, BigInteger p, BigInteger q,BigInteger d_p, BigInteger d_q, BigInteger qInv)
+{
+String claire = "";
+int j = 0;
+int chiffreLength = chiffre.length();
+for(int i = 1; i<chiffreLength ; i++){
+    if(chiffre.charAt(i)!=' ' && chiffre.charAt(i-1)==' ')
+        j = i;
+    else if((chiffre.charAt(i)==' ' && chiffre.charAt(i-1)!=' ')){
+    claire = claire + (char) dechiffrementRSA_CRT(new BigInteger(chiffre.substring(j, i)), p,q,d_p,d_q,qInv).subtract(p.multiply(q)).negate().intValue(); // y=rsa(N-x) ===> rsa-1(y)= N-x ====> -x =====> x  
+}
+       else if((chiffre.charAt(i)!=' '&& i == chiffreLength-1))
+           claire = claire + (char) dechiffrementRSA_CRT(new BigInteger(chiffre.substring(j)), p,q,d_p,d_q,qInv).subtract(p.multiply(q)).negate().intValue(); // y=rsa(N-x) ===> rsa-1(y)= N-x ====> -x =====> x  
+
+    
+}
+return claire;    
+	
+}
+      
+      
+    BigInteger generatePrim(int bitsLenght, int certitude)
+    {
+        Random rdm = new Random();
+        return new BigInteger(bitsLenght, certitude, rdm);
+    } 
+
+    
+
+BigInteger generatePrimeWith(int bitsLenght, BigInteger num) {
+    Random rdm = new Random();
+    BigInteger result = new BigInteger(bitsLenght,rdm);
+   while( ! result.gcd(num).equals(BigInteger.ONE) )
+   {
+       result = new BigInteger(bitsLenght,rdm);
+   }
+   
+   return result;
+}   
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//AES
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+public int multiplyPoly2M(int poly1, int poly2) {
+        int result = 0;
+        String binaryFormOfPoly2 = Integer.toBinaryString(poly2);
+        int length = binaryFormOfPoly2.length();
+        for (int i = 0; i < length; i++) {
+            if (binaryFormOfPoly2.charAt(i) == '1') {
+                result = result ^ poly1 << (length - 1 - i); // Xor with shifted left of poly1
+            }
+        }
+        return result;
+    }
+
+    int numOfBitslog2(int value) {
+        return Integer.SIZE - Integer.numberOfLeadingZeros(value);
+    }
+
+    public int reductionGalois2M(int poly, int reductionPoly) {
+        int polynomial = poly;
+        int reductionPolyBitsNum = numOfBitslog2(reductionPoly);
+        int bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                polynomial = polynomial ^ (reductionPoly << bitDiff);
+            } else {
+                polynomial = polynomial ^ reductionPoly;
+            }
+
+            bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+        }
+        return polynomial;
+    }
+
+    public int multiplyGalois2M(int poly1, int poly2, int reductionPoly) {
+        return reductionGalois2M(multiplyPoly2M(poly1, poly2), reductionPoly);
+    }
+
+    public int modGalois(int poly, int polyModulo) {
+        int polynomial = poly;
+        int reductionPolyBitsNum = numOfBitslog2(polyModulo);
+        int bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                polynomial = polynomial ^ (polyModulo << bitDiff);
+            } else {
+                polynomial = polynomial ^ polyModulo;
+            }
+
+            bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+        }
+        return polynomial;
+    }
+
+    public int[] modDivGalois(int poly, int polyModulo) {
+        int[] modDiv = new int[2];
+        modDiv[1] = poly; // mod
+        modDiv[0] = 0; // div quotient
+        int reductionPolyBitsNum = numOfBitslog2(polyModulo);
+        int bitDiff = numOfBitslog2(modDiv[1]) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                modDiv[1] = modDiv[1] ^ (polyModulo << bitDiff);
+                modDiv[0] = modDiv[0] ^ (1 << bitDiff);
+            } else {
+                modDiv[1] = modDiv[1] ^ polyModulo;
+                modDiv[0] = modDiv[0] ^ (1);
+            }
+            bitDiff = numOfBitslog2(modDiv[1]) - reductionPolyBitsNum;
+        }
+        return modDiv;
+    }
+
+    public int divGalois(int poly1, int poly2) {
+        return modDivGalois(poly1, poly2)[0];
+    }
+
+    int[] EuclideEtenduGalois(int polyA, int polyB) {
+        int[] result = new int[3];
+        if (polyB == 0) {
+            result[0] = polyA; //gcd
+            result[1] = 1;    //x
+            result[2] = 0;   //y
+            return result;
+        } else {
+
+            result = EuclideEtenduGalois(polyB, modGalois(polyA, polyB));
+            int X = result[1];
+            result[1] = result[2];
+            result[2] = X ^ multiplyPoly2M(divGalois(polyA, polyB), result[1]);
+            return result;
+        }
+    }
+
+    public int inverseGalois(int poly, int polyReduction) {
+        return modGalois(EuclideEtenduGalois(poly, polyReduction)[1], polyReduction);
+
+    }
+
+     public int inverseGaloisAES(int poly) {
+  int[] invGlAES  = { 
+0x00 , 0x01 , 0x8D , 0xF6 , 0xCB , 0x52 , 0x7B , 0xD1 , 0xE8 , 0x4F , 0x29 , 0xC0 , 0xB0 , 0xE1 , 0xE5 , 0xC7 , 
+0x74 , 0xB4 , 0xAA , 0x4B , 0x99 , 0x2B , 0x60 , 0x5F , 0x58 , 0x3F , 0xFD , 0xCC , 0xFF , 0x40 , 0xEE , 0xB2 , 
+0x3A , 0x6E , 0x5A , 0xF1 , 0x55 , 0x4D , 0xA8 , 0xC9 , 0xC1 , 0x0A , 0x98 , 0x15 , 0x30 , 0x44 , 0xA2 , 0xC2 , 
+0x2C , 0x45 , 0x92 , 0x6C , 0xF3 , 0x39 , 0x66 , 0x42 , 0xF2 , 0x35 , 0x20 , 0x6F , 0x77 , 0xBB , 0x59 , 0x19 , 
+0x1D , 0xFE , 0x37 , 0x67 , 0x2D , 0x31 , 0xF5 , 0x69 , 0xA7 , 0x64 , 0xAB , 0x13 , 0x54 , 0x25 , 0xE9 , 0x09 , 
+0xED , 0x5C , 0x05 , 0xCA , 0x4C , 0x24 , 0x87 , 0xBF , 0x18 , 0x3E , 0x22 , 0xF0 , 0x51 , 0xEC , 0x61 , 0x17 , 
+0x16 , 0x5E , 0xAF , 0xD3 , 0x49 , 0xA6 , 0x36 , 0x43 , 0xF4 , 0x47 , 0x91 , 0xDF , 0x33 , 0x93 , 0x21 , 0x3B , 
+0x79 , 0xB7 , 0x97 , 0x85 , 0x10 , 0xB5 , 0xBA , 0x3C , 0xB6 , 0x70 , 0xD0 , 0x06 , 0xA1 , 0xFA , 0x81 , 0x82 , 
+0x83 , 0x7E , 0x7F , 0x80 , 0x96 , 0x73 , 0xBE , 0x56 , 0x9B , 0x9E , 0x95 , 0xD9 , 0xF7 , 0x02 , 0xB9 , 0xA4 , 
+0xDE , 0x6A , 0x32 , 0x6D , 0xD8 , 0x8A , 0x84 , 0x72 , 0x2A , 0x14 , 0x9F , 0x88 , 0xF9 , 0xDC , 0x89 , 0x9A , 
+0xFB , 0x7C , 0x2E , 0xC3 , 0x8F , 0xB8 , 0x65 , 0x48 , 0x26 , 0xC8 , 0x12 , 0x4A , 0xCE , 0xE7 , 0xD2 , 0x62 , 
+0x0C , 0xE0 , 0x1F , 0xEF , 0x11 , 0x75 , 0x78 , 0x71 , 0xA5 , 0x8E , 0x76 , 0x3D , 0xBD , 0xBC , 0x86 , 0x57 , 
+0x0B , 0x28 , 0x2F , 0xA3 , 0xDA , 0xD4 , 0xE4 , 0x0F , 0xA9 , 0x27 , 0x53 , 0x04 , 0x1B , 0xFC , 0xAC , 0xE6 , 
+0x7A , 0x07 , 0xAE , 0x63 , 0xC5 , 0xDB , 0xE2 , 0xEA , 0x94 , 0x8B , 0xC4 , 0xD5 , 0x9D , 0xF8 , 0x90 , 0x6B , 
+0xB1 , 0x0D , 0xD6 , 0xEB , 0xC6 , 0x0E , 0xCF , 0xAD , 0x08 , 0x4E , 0xD7 , 0xE3 , 0x5D , 0x50 , 0x1E , 0xB3 , 
+0x5B , 0x23 , 0x38 , 0x34 , 0x68 , 0x46 , 0x03 , 0x8C , 0xDD , 0x9C , 0x7D , 0xA0 , 0xCD , 0x1A , 0x41 , 0x1C };
+      
+return invGlAES[poly] ;
+    }
+    
+    public String inverseTableGeneration(int polyIrreductibleReduction) {
+        int numberOfElement = numOfBitslog2(polyIrreductibleReduction)-1;
+
+        String result = "{ 0x00 , ";
+        int inverse;
+        int k =1;
+        for (int element = 1; element < (int) Math.pow(2, numberOfElement) - 1; element++) {
+         if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            inverse = inverseGalois(element, polyIrreductibleReduction);
+            if(inverse < 16)
+            result = result + "0x0" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT) + " , ";
+          
+         k++;      
+        }
+        inverse = inverseGalois((int) Math.pow(2, numberOfElement) - 1, polyIrreductibleReduction);
+        if(inverse < 16)
+            result = result + "0x0" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+
+    int[] MultiplyMatriceVect(int[][] matrice, int[] vect){
+       int[] resultVect = new int[matrice.length]; // ça taille est le nombre de lignes de la  matrice
+        for(int i = 0; i<matrice.length; i++){ // lignes matrices
+          resultVect[i] = 0;
+            for(int j = 0; j<vect.length; j++) // cologne matrice , vect
+            {
+             resultVect[i] = resultVect[i]+matrice[i][j]*vect[j];   
+            }
+        }
+    return resultVect;
+    }
+    
+    String intToHexStr0x(int num){
+        String result="";
+        if(num < 16)
+            result = result + "0x0" + Integer.toHexString(num).toUpperCase(Locale.ROOT);
+            else 
+            result = result + "0x" + Integer.toHexString(num).toUpperCase(Locale.ROOT);
+    return result;
+    }
+   
+    int AES_SboxAffineTr(int poly){
+      int[] matriceTrAffine = {
+           0xF1 /*<=11110001<={1,0,0,0,1,1,1,1}*/,
+           0xE3 /*<=11100011<={1,1,0,0,0,1,1,1}*/,
+           0xC7 /*<=11000111<={1,1,1,0,0,0,1,1}*/,
+           0x8F /*<=10001111<={1,1,1,1,0,0,0,1}*/,
+           0x1F /*<=00011111<={1,1,1,1,1,0,0,0}*/,
+           0x3E /*<=00111110<={0,1,1,1,1,1,0,0}*/,
+           0x7C /*<=01111100<={0,0,1,1,1,1,1,0}*/,
+           0xF8 /*<=11111000<={0,0,0,1,1,1,1,1}*/ 
+       }; 
+             
+      // int vectTrAffine = 0x63 /*<=01100011<={1,1,0,0,0,1,1,0}*/;
+       int result = 0;
+       
+       for(int i = 0; i<8; i++){
+          if(Math.floorMod(Integer.bitCount(matriceTrAffine[i]&poly), 2)==1)  
+           result = result^(1<<i) ;
+       }
+       
+       result = result ^ 0x63 /*vectTrAffine*/;
+       return result;
+    }
+    
+    int Inv_AES_SboxAffineTr(int poly){
+      int[] matriceTrAffine = {
+           
+
+           0xA4 /*<=10100100<={0,0,1,0,0,1,0,1}*/,
+           0x49 /*<=01001001<={1,0,0,1,0,0,1,0}*/,
+           0x92 /*<=10010010<={0,1,0,0,1,0,0,1}*/,
+           0x25 /*<=00100101<={1,0,1,0,0,1,0,0}*/, 
+           0x4A /*<=01001010<={0,1,0,1,0,0,1,0}*/,
+           0x94 /*<=10010100<={0,0,1,0,1,0,0,1}*/,
+           0x29 /*<=00101001<={1,0,0,1,0,1,0,0}*/,
+           0x52 /*<=01010010<={0,1,0,0,1,0,1,0}*/
+      }; 
+             
+      // int vectTrAffine = 0x05 /*<=00000101<={1,0,1,0,0,0,0,0}*/;
+       int result = 0;
+       
+       for(int i = 0; i<8; i++){
+          if(Math.floorMod(Integer.bitCount(matriceTrAffine[i]&poly), 2)==1)  
+           result = result^(1<<i) ;
+       }
+       
+       result = result ^ 0x05 /*vectTrAffine*/;
+       return result;
+    }
+    
+    
+    /*
+    int Aes_SboxAffineTr(int poly){
+      int[] polyAff = new int[8];
+      String polyStr = Integer.toBinaryString(poly);
+      int lenghtStr = polyStr.length();
+      for(int i =0; i<lenghtStr; i++)
+      {
+          if(polyStr.charAt(i)=='1')
+              polyAff[i] = 1;
+          else 
+              polyAff[i]=0;
+      }
+      
+      for(int i = lenghtStr ; i< 8 ;i++)
+           polyAff[i]=0;
+      
+        int[][] matriceTrAffine = {
+           {1,0,0,0,1,1,1,1},
+           {1,1,0,0,0,1,1,1},
+           {1,1,1,0,0,0,1,1},
+           {1,1,1,1,0,0,0,1},
+           {1,1,1,1,1,0,0,0},
+            {0,1,1,1,1,1,0,0},
+           {0,0,1,1,1,1,1,0},
+          {0,0,0,1,1,1,1,1} 
+       }; 
+             
+      int[] vectTrAffine ={1,1,0,0,0,1,1,0};
+       int[] result = new int[8];
+       
+       for(int i = 0; i<8; i++){
+           result[i]=0;
+           for(int j = 0; j<8;j++)
+          result[i] ^= matriceTrAffine[i][j] & polyAff[j];    
+       }
+       for(int i = 0; i<8; i++)
+       result[i] ^= vectTrAffine[i];
+       
+       int resultInt =result[0];
+       for(int i =1; i<8; i++){
+          if(result[i]==1)
+           resultInt ^= (1<<i);
+       }
+       return resultInt;
+    }
+   */ 
+  public   int AesSbox(int poly){
+     return AES_SboxAffineTr(inverseGalois(poly,283 ));
+  }
+  
+  
+  
+   int[] Sbox   = 
+  { 
+0x63 , 0x7C , 0x77 , 0x7B , 0xF2 , 0x6B , 0x6F , 0xC5 , 0x30 , 0x01 , 0x67 , 0x2B , 0xFE , 0xD7 , 0xAB , 0x76 , 
+0xCA , 0x82 , 0xC9 , 0x7D , 0xFA , 0x59 , 0x47 , 0xF0 , 0xAD , 0xD4 , 0xA2 , 0xAF , 0x9C , 0xA4 , 0x72 , 0xC0 , 
+0xB7 , 0xFD , 0x93 , 0x26 , 0x36 , 0x3F , 0xF7 , 0xCC , 0x34 , 0xA5 , 0xE5 , 0xF1 , 0x71 , 0xD8 , 0x31 , 0x15 , 
+0x04 , 0xC7 , 0x23 , 0xC3 , 0x18 , 0x96 , 0x05 , 0x9A , 0x07 , 0x12 , 0x80 , 0xE2 , 0xEB , 0x27 , 0xB2 , 0x75 , 
+0x09 , 0x83 , 0x2C , 0x1A , 0x1B , 0x6E , 0x5A , 0xA0 , 0x52 , 0x3B , 0xD6 , 0xB3 , 0x29 , 0xE3 , 0x2F , 0x84 , 
+0x53 , 0xD1 , 0x00 , 0xED , 0x20 , 0xFC , 0xB1 , 0x5B , 0x6A , 0xCB , 0xBE , 0x39 , 0x4A , 0x4C , 0x58 , 0xCF , 
+0xD0 , 0xEF , 0xAA , 0xFB , 0x43 , 0x4D , 0x33 , 0x85 , 0x45 , 0xF9 , 0x02 , 0x7F , 0x50 , 0x3C , 0x9F , 0xA8 , 
+0x51 , 0xA3 , 0x40 , 0x8F , 0x92 , 0x9D , 0x38 , 0xF5 , 0xBC , 0xB6 , 0xDA , 0x21 , 0x10 , 0xFF , 0xF3 , 0xD2 , 
+0xCD , 0x0C , 0x13 , 0xEC , 0x5F , 0x97 , 0x44 , 0x17 , 0xC4 , 0xA7 , 0x7E , 0x3D , 0x64 , 0x5D , 0x19 , 0x73 , 
+0x60 , 0x81 , 0x4F , 0xDC , 0x22 , 0x2A , 0x90 , 0x88 , 0x46 , 0xEE , 0xB8 , 0x14 , 0xDE , 0x5E , 0x0B , 0xDB , 
+0xE0 , 0x32 , 0x3A , 0x0A , 0x49 , 0x06 , 0x24 , 0x5C , 0xC2 , 0xD3 , 0xAC , 0x62 , 0x91 , 0x95 , 0xE4 , 0x79 , 
+0xE7 , 0xC8 , 0x37 , 0x6D , 0x8D , 0xD5 , 0x4E , 0xA9 , 0x6C , 0x56 , 0xF4 , 0xEA , 0x65 , 0x7A , 0xAE , 0x08 , 
+0xBA , 0x78 , 0x25 , 0x2E , 0x1C , 0xA6 , 0xB4 , 0xC6 , 0xE8 , 0xDD , 0x74 , 0x1F , 0x4B , 0xBD , 0x8B , 0x8A , 
+0x70 , 0x3E , 0xB5 , 0x66 , 0x48 , 0x03 , 0xF6 , 0x0E , 0x61 , 0x35 , 0x57 , 0xB9 , 0x86 , 0xC1 , 0x1D , 0x9E , 
+0xE1 , 0xF8 , 0x98 , 0x11 , 0x69 , 0xD9 , 0x8E , 0x94 , 0x9B , 0x1E , 0x87 , 0xE9 , 0xCE , 0x55 , 0x28 , 0xDF , 
+0x8C , 0xA1 , 0x89 , 0x0D , 0xBF , 0xE6 , 0x42 , 0x68 , 0x41 , 0x99 , 0x2D , 0x0F , 0xB0 , 0x54 , 0xBB , 0x16 };
+ 
+  public   int AesSboxTbl(int poly){
+        return Sbox[poly];
+  }
+  
+  public   int invAesSbox(int poly){
+     return inverseGalois(Inv_AES_SboxAffineTr(poly),283 );
+  }
+  
+   int[] invSbox =   {
+0x52 , 0x09 , 0x6A , 0xD5 , 0x30 , 0x36 , 0xA5 , 0x38 , 0xBF , 0x40 , 0xA3 , 0x9E , 0x81 , 0xF3 , 0xD7 , 0xFB , 
+0x7C , 0xE3 , 0x39 , 0x82 , 0x9B , 0x2F , 0xFF , 0x87 , 0x34 , 0x8E , 0x43 , 0x44 , 0xC4 , 0xDE , 0xE9 , 0xCB , 
+0x54 , 0x7B , 0x94 , 0x32 , 0xA6 , 0xC2 , 0x23 , 0x3D , 0xEE , 0x4C , 0x95 , 0x0B , 0x42 , 0xFA , 0xC3 , 0x4E , 
+0x08 , 0x2E , 0xA1 , 0x66 , 0x28 , 0xD9 , 0x24 , 0xB2 , 0x76 , 0x5B , 0xA2 , 0x49 , 0x6D , 0x8B , 0xD1 , 0x25 , 
+0x72 , 0xF8 , 0xF6 , 0x64 , 0x86 , 0x68 , 0x98 , 0x16 , 0xD4 , 0xA4 , 0x5C , 0xCC , 0x5D , 0x65 , 0xB6 , 0x92 , 
+0x6C , 0x70 , 0x48 , 0x50 , 0xFD , 0xED , 0xB9 , 0xDA , 0x5E , 0x15 , 0x46 , 0x57 , 0xA7 , 0x8D , 0x9D , 0x84 , 
+0x90 , 0xD8 , 0xAB , 0x00 , 0x8C , 0xBC , 0xD3 , 0x0A , 0xF7 , 0xE4 , 0x58 , 0x05 , 0xB8 , 0xB3 , 0x45 , 0x06 , 
+0xD0 , 0x2C , 0x1E , 0x8F , 0xCA , 0x3F , 0x0F , 0x02 , 0xC1 , 0xAF , 0xBD , 0x03 , 0x01 , 0x13 , 0x8A , 0x6B , 
+0x3A , 0x91 , 0x11 , 0x41 , 0x4F , 0x67 , 0xDC , 0xEA , 0x97 , 0xF2 , 0xCF , 0xCE , 0xF0 , 0xB4 , 0xE6 , 0x73 , 
+0x96 , 0xAC , 0x74 , 0x22 , 0xE7 , 0xAD , 0x35 , 0x85 , 0xE2 , 0xF9 , 0x37 , 0xE8 , 0x1C , 0x75 , 0xDF , 0x6E , 
+0x47 , 0xF1 , 0x1A , 0x71 , 0x1D , 0x29 , 0xC5 , 0x89 , 0x6F , 0xB7 , 0x62 , 0x0E , 0xAA , 0x18 , 0xBE , 0x1B , 
+0xFC , 0x56 , 0x3E , 0x4B , 0xC6 , 0xD2 , 0x79 , 0x20 , 0x9A , 0xDB , 0xC0 , 0xFE , 0x78 , 0xCD , 0x5A , 0xF4 , 
+0x1F , 0xDD , 0xA8 , 0x33 , 0x88 , 0x07 , 0xC7 , 0x31 , 0xB1 , 0x12 , 0x10 , 0x59 , 0x27 , 0x80 , 0xEC , 0x5F , 
+0x60 , 0x51 , 0x7F , 0xA9 , 0x19 , 0xB5 , 0x4A , 0x0D , 0x2D , 0xE5 , 0x7A , 0x9F , 0x93 , 0xC9 , 0x9C , 0xEF , 
+0xA0 , 0xE0 , 0x3B , 0x4D , 0xAE , 0x2A , 0xF5 , 0xB0 , 0xC8 , 0xEB , 0xBB , 0x3C , 0x83 , 0x53 , 0x99 , 0x61 , 
+0x17 , 0x2B , 0x04 , 0x7E , 0xBA , 0x77 , 0xD6 , 0x26 , 0xE1 , 0x69 , 0x14 , 0x63 , 0x55 , 0x21 , 0x0C , 0x7D };
+
+  public   int invAesSboxTbl(int poly){
+   
+  return invSbox[poly];
+  }
+  
+    public String AesSboxTableGeneration() {
+        String result ="{ ";
+        int sBoxElement;
+       int k=0;
+        for (int element = 0; element < 255 ; element++) {
+         if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            
+            sBoxElement = AesSbox(element); //283 = 100011011 = pi(x) AES irreductible polynomial
+            if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+   k++;
+        }
+         sBoxElement = AesSbox(255);
+        if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+   
+    public String invAesSboxTableGeneration() {
+        String result ="{ ";
+        int sBoxElement;
+        int k=0;
+        for (int element = 0; element < 255 ; element++) {
+                       
+      if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            
+            sBoxElement = invAesSbox(element); //283 = 100011011 = pi(x) AES irreductible polynomial
+            if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            
+            k++;
+        }
+         sBoxElement = invAesSbox(255);
+        if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+    
+    
+   public int[][] AesSubtituteLayer(int[][] state) 
+   {
+       int[][] result = new int[4][4];
+       for(int i = 0; i <4;i++){
+           for(int j = 0;j<4 ; j++){
+               result[i][j] =Sbox[state[i][j]] ; // sBox should be globale
+           }
+       }
+       return result;
+   }
+    
+  public int[][] invAesSubtituteLayer(int[][] state) 
+   {
+       int[][] result = new int[4][4];
+       for(int i = 0; i <4;i++){
+           for(int j = 0;j<4 ; j++){
+               result[i][j] =invSbox[state[i][j]] ; // invSBox should be globale
+           }
+       }
+       return result;
+   }  
+    
+   public int[][]  shiftRowLayer(int[][] state){
+       int[][] result = new int[4][4];
+       //row 1
+        System.arraycopy(state[0], 0, result[0], 0, 4);
+       
+        //row2 (1 shift)
+        System.arraycopy(state[1], 1, result[1], 0, 3);
+       result[1][3] = state[1][0 ];
+     
+       //row3  (2 shifts)
+       System.arraycopy(state[2], 2, result[2], 0, 2);
+       System.arraycopy(state[2], 0, result[2], 2, 2);
+        
+       //row4  (3 shifts)
+       System.arraycopy(state[3], 0, result[3], 1, 3);
+       result[3][0] = state[3][3];
+       
+      return result; 
+   }
+   
+      public int[][]  invShiftRowLayer(int[][] state){
+       int[][] result = new int[4][4];
+       //row 1
+        System.arraycopy(state[0], 0, result[0], 0, 4);
+       
+        //row2 (1 shift)
+        System.arraycopy(state[1], 0, result[1], 1, 3);
+       result[1][0] = state[1][3 ];
+     
+       //row3  (2 shifts)
+       System.arraycopy(state[2], 0, result[2], 2, 2);
+       System.arraycopy(state[2],2, result[2], 0, 2);
+        
+       //row4  (3 shifts)
+       System.arraycopy(state[3], 1, result[3], 0, 3);
+       result[3][3] = state[3][0];
+       
+      return result; 
+   }
+      
+      int[] mixColumn(int[] column){
+          int[] result = new int[4];
+         result[0]= reductionGalois2M(column[0]<<1,  0x11B) ^ reductionGalois2M((column[1]<<1)^column[1], 0x11B)^column[2]^column[3];
+      
+          result[1]=column[0]^ reductionGalois2M(column[1]<<1, 0x11B) ^ reductionGalois2M((column[2]<<1)^column[2], 0x11B)^column[3];
+     
+          result[2]=column[0]^column[1]^ reductionGalois2M(column[2]<<1, 0x11B) ^ reductionGalois2M((column[3]<<1)^column[3], 0x11B);
+      
+          result[3]=reductionGalois2M((column[0]<<1)^column[0], 0x11B)^column[1]^column[2]^ reductionGalois2M(column[3]<<1, 0x11B);
+          
+          /* 
+          result[0]= multiplyGalois2M(column[0], 0x02, 0x11B) ^ multiplyGalois2M(column[1], 0x03, 0x11B)^column[2]^column[3];
+      
+          result[1]=column[0]^ multiplyGalois2M(column[1], 0x02, 0x11B) ^ multiplyGalois2M(column[2], 0x03, 0x11B)^column[3];
+     
+          result[2]=column[0]^column[1]^ multiplyGalois2M(column[2], 0x02, 0x11B) ^ multiplyGalois2M(column[3], 0x03, 0x11B);
+      
+          result[2]=multiplyGalois2M(column[0], 0x03, 0x11B)^column[1]^column[2]^ multiplyGalois2M(column[3], 0x02, 0x11B);
+          */
+          
+          return result;
+      }
+      
+      int[] invMixColumn(int[] column){
+          int[] result = new int[4];
+          
+          
+          result[0]= multiplyGalois2M(column[0], 0x0E, 0x11B) ^ multiplyGalois2M(column[1], 0x0B, 0x11B)^multiplyGalois2M(column[2], 0x0D, 0x11B)^multiplyGalois2M(column[3], 0x09, 0x11B);
+      
+          result[1]=multiplyGalois2M(column[0], 0x09, 0x11B)^ multiplyGalois2M(column[1], 0x0E, 0x11B) ^ multiplyGalois2M(column[2], 0x0B, 0x11B)^multiplyGalois2M(column[3], 0x0D, 0x11B);
+     
+          result[2]=multiplyGalois2M(column[0], 0x0D, 0x11B)^multiplyGalois2M(column[1], 0x09, 0x11B)^ multiplyGalois2M(column[2], 0x0E, 0x11B) ^ multiplyGalois2M(column[3], 0x0B, 0x11B);
+      
+          result[3]=multiplyGalois2M(column[0], 0x0B, 0x11B)^multiplyGalois2M(column[1], 0x0D, 0x11B)^multiplyGalois2M(column[2], 0x09, 0x11B)^ multiplyGalois2M(column[3], 0x0E, 0x11B);
+          
+          
+          return result;
+      }
+      
+      
+       int[][] mixColumnLayer(int[][] state){
+           int[][]  result = new int[4][4];
+           int[] mixColumn;
+           
+           mixColumn = mixColumn(new int[]{state[0][0],state[1][0],state[2][0],state[3][0]});
+           for(int i = 0; i<4; i++){
+             result[i][0] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][1],state[1][1],state[2][1],state[3][1]});
+           for(int i = 0; i<4; i++){
+             result[i][1] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][2],state[1][2],state[2][2],state[3][2]});
+           for(int i = 0; i<4; i++){
+             result[i][2] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][3],state[1][3],state[2][3],state[3][3]});
+           for(int i = 0; i<4; i++){
+             result[i][3] = mixColumn[i];  
+           }
+           
+          return result; 
+       }
+       
+       int[][] invMixColumnLayer(int[][] state){
+           int[][]  result = new int[4][4];
+           int[] invmixColumn;
+           
+           invmixColumn = invMixColumn(new int[]{state[0][0],state[1][0],state[2][0],state[3][0]});
+           for(int i = 0; i<4; i++){
+             result[i][0] = invmixColumn[i];  
+           }
+           
+           invmixColumn = invMixColumn(new int[]{state[0][1],state[1][1],state[2][1],state[3][1]});
+           for(int i = 0; i<4; i++){
+             result[i][1] = invmixColumn[i];  
+           }
+           
+           invmixColumn = invMixColumn(new int[]{state[0][2],state[1][2],state[2][2],state[3][2]});
+           for(int i = 0; i<4; i++){
+             result[i][2] = invmixColumn[i];  
+           }
+           
+           invmixColumn = invMixColumn(new int[]{state[0][3],state[1][3],state[2][3],state[3][3]});
+           for(int i = 0; i<4; i++){
+             result[i][3] = invmixColumn[i];  
+           }
+           
+          return result; 
+       }
+       
+       
+       //////////////////////
+       int[] RC = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
+     public int[] fonctionG(int[] vect, int index){
+         int[] result ={vect[1],vect[2],vect[3],vect[0]};
+         
+         result[0] = Sbox[result[0]]^RC[index-1];
+         result[1] = Sbox[result[1]];
+         result[2] = Sbox[result[2]];
+         result[3] = Sbox[result[3]];
+         
+         return result;
+     }
+     ///////////////////////////////
+     
+     
+     public int[] wordXOR(int[] word1, int[] word2){
+        return new int[]{(word1[0]^word2[0]),(word1[1]^word2[1]),(word1[2]^word2[2]),(word1[3]^word2[3])};
+     } 
+     
+     
+     
+     // key Shedule vector
+    int[][] keyShedule128(int[] cle) // cle de 16 bytes
+    { int[][] W_128 = new int[44][4]; // a vector of 44 words, each word of 4 bytes
+  
+    // en copie la cle dans les 4 1er mot du vect W
+    System.arraycopy(cle,0 , W_128[0], 0, 4);
+     System.arraycopy(cle,4 , W_128[1], 0, 4);
+      System.arraycopy(cle,8 , W_128[2], 0, 4);
+       System.arraycopy(cle,12 , W_128[3], 0, 4);
+       
+       int k =0;
+    for(int i=4; i <44; i++){
+        if(k == 4)
+        {
+            k=0;
+        }
+        
+        if(k==0){ // cas  i mod 4 = 0
+          System.arraycopy(wordXOR(fonctionG(W_128[i-1], Math.floorDiv(i, 4)), W_128[i-4]),0 ,  W_128[i], 0, 4); //W[i] = g(W[i-1])^W[i-4];
+        }
+        else{
+           System.arraycopy(wordXOR( W_128[i-4],W_128[i-1]),0,W_128[i],0,4);
+        }
+        
+        k++;
+    }   
+      return W_128;
+            }
+    
+    
+    
+     int[][] keyShedule192(int[] cle) // cle de 24 bytes
+    { int[][] W_192= new int[52][4]; // a vector of 52 words, each word of 4 bytes
+  
+    // en copie la cle dans les 6 1er mot du vect W
+    System.arraycopy(cle,0 , W_192[0], 0, 4);
+     System.arraycopy(cle,4 , W_192[1], 0, 4);
+      System.arraycopy(cle,8 , W_192[2], 0, 4);
+       System.arraycopy(cle,12 , W_192[3], 0, 4);
+         System.arraycopy(cle,16 , W_192[4], 0, 4);
+           System.arraycopy(cle,20 , W_192[5], 0, 4);
+       
+       int k =0;
+    for(int i=6; i <52; i++){
+        if(k == 6)
+        {
+            k=0;
+        }
+        
+        if(k==0){ // cas  i mod 6 = 0
+          System.arraycopy(wordXOR(fonctionG(W_192[i-1], Math.floorDiv(i, 6)), W_192[i-6]),0 ,  W_192[i], 0, 4); //W[i] = g(W[i-1])^W[i-6];
+        }
+        else{
+           System.arraycopy(wordXOR( W_192[i-6],W_192[i-1]),0,W_192[i],0,4);
+        }
+        
+        k++;
+    }   
+      return W_192;
+            }
+    
+     
+    
+      public int[] fonctionH(int[] vect){
+        return new int[]{Sbox[vect[0]],Sbox[vect[1]],Sbox[vect[2]],Sbox[vect[3]]};
+     }
+     
+     
+     
+    int[][] keyShedule256(int[] cle) // cle de 24 bytes
+    { 
+        int[][] W_256= new int[60][4]; // a vector of 52 words, each word of 4 bytes
+  
+    // en copie la cle dans les 8 1ers mot du vect W
+    System.arraycopy(cle,0 , W_256[0], 0, 4);
+     System.arraycopy(cle,4 , W_256[1], 0, 4);
+      System.arraycopy(cle,8 , W_256[2], 0, 4);
+       System.arraycopy(cle,12 , W_256[3], 0, 4);
+         System.arraycopy(cle,16 , W_256[4], 0, 4);
+           System.arraycopy(cle,20 , W_256[5], 0, 4);
+              System.arraycopy(cle,24 , W_256[6], 0, 4);
+                 System.arraycopy(cle,28 , W_256[7], 0, 4);
+       
+       int k =0;
+    for(int i=8; i <60; i++){
+        if(k == 8)
+        {
+            k=0;
+        }
+        
+        if(k==0){ // cas  i mod 8 = 0
+          System.arraycopy(wordXOR(fonctionG(W_256[i-1], Math.floorDiv(i, 8)), W_256[i-8]),0 ,  W_256[i], 0, 4); //W[i] = g(W[i-1])^W[i-8];
+        }
+        else if(k==4){ // cas i mod 8 = 4
+        System.arraycopy(wordXOR( fonctionH(W_256[i-1]),W_256[i-8]),0,W_256[i],0,4);  // W[i] = h(W[i-1])^W[i-8]   
+        }
+        else {
+           System.arraycopy(wordXOR( W_256[i-8],W_256[i-1]),0,W_256[i],0,4);
+        }
+        
+        k++;
+    }   
+      return W_256;
+            }
+    
+    
+    int[][] AES128_Chiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int[][] W = keyShedule128(cle);
+       
+        // addKey Layer befor round 1
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }
+      
+       
+       // first 9 rounds
+       for(int k =1; k<=9; k++){
+           state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           state = mixColumnLayer(state);
+           
+// addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+            
+       }
+       
+     // round 10    //////////////////////////////////////
+      state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           // pas de mixColumnLayer
+           
+// addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+10*4][j]^ state[j][i];   
+              }
+            } 
+     ////////////////////////////////////////////////       
+     
+            return state;
+    }
+    
+     int[][] AES192_Chiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int W[][] = keyShedule192(cle);
+       
+        // addKey Layer befor round 1
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }
+      
+       
+       // first 11 rounds
+       for(int k =1; k<=11; k++){
+           state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           state = mixColumnLayer(state);
+           
+// addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+            
+       }
+       
+     // round 12    //////////////////////////////////////
+      state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           // pas de mixColumnLayer
+           
+// addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+12*4][j]^ state[j][i];   
+              }
+            } 
+     ////////////////////////////////////////////////       
+     
+            return state;
+    }
+     
+     
+        int[][] AES256_Chiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int W[][] = keyShedule256(cle);
+       
+        // addKey Layer befor round 1
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }
+      
+       
+       // first 13 rounds
+       for(int k =1; k<=13; k++){
+           state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           state = mixColumnLayer(state);
+           
+// addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+            
+       }
+       
+     // round 14    //////////////////////////////////////
+      state = AesSubtituteLayer(state);
+           state = shiftRowLayer(state);
+           // pas de mixColumnLayer
+           
+// addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+14*4][j]^ state[j][i];   
+              }
+            } 
+     ////////////////////////////////////////////////       
+     
+            return state;
+    }
+   
+        
+        
+        
+        
+    int[][] AES128_Dechiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int[][] W = keyShedule128(cle);
+       
+         // round 1    //////////////////////////////////////
+        
+        // addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+10*4][j]^ state[j][i];   
+              }
+            } 
+        
+            // pas de mixColumnLayer
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+          
+           
+
+     //////////////////////////////////////////////// 
+      
+       
+       // last 9 rounds
+       for(int k =9; k>=1; k--){
+          
+           // addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+           
+           
+           state = invMixColumnLayer(state);
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+
+            
+       }
+       
+                   
+           
+  // addKey Layer afrer last round 
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }           
+            
+            return state;
+    }    
+    
+    
+    
+    
+    int[][] AES192_Dechiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int W[][] = keyShedule192(cle);
+       
+         // round 1    //////////////////////////////////////
+        
+        // addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+12*4][j]^ state[j][i];   
+              }
+            } 
+        
+            // pas de mixColumnLayer
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+          
+           
+
+     //////////////////////////////////////////////// 
+      
+       
+       // last 11 rounds
+       for(int k =11; k>=1; k--){
+          
+           // addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+           
+           
+           state = invMixColumnLayer(state);
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+
+            
+       }
+       
+                   
+           
+  // addKey Layer afrer last round 
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }           
+            
+            return state;
+    } 
+    
+    
+    
+    
+    int[][] AES256_Dechiffrement(int[][] state, int[] cle){
+      // keys Shedule
+        int W[][] = keyShedule256(cle);
+       
+         // round 1    //////////////////////////////////////
+        
+        // addKey layer
+          
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+14*4][j]^ state[j][i];   
+              }
+            } 
+        
+            // pas de mixColumnLayer
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+          
+           
+
+     //////////////////////////////////////////////// 
+      
+       
+       // last 13 rounds
+       for(int k =13; k>=1; k--){
+          
+           // addKey layer
+           int s = 4*k;
+            for(int i=0; i<4 ; i++){
+              for(int j = 0; j<4; j++)
+              {
+               state[j][i] = W[i+s][j]^ state[j][i];   
+              }
+            }
+           
+           
+           state = invMixColumnLayer(state);
+           state = invShiftRowLayer(state);
+           state = invAesSubtituteLayer(state);
+
+            
+       }
+       
+                   
+           
+  // addKey Layer afrer last round 
+       for(int i=0; i<4 ; i++){
+           for(int j = 0; j<4; j++)
+           {
+             state[j][i] = W[i][j]^ state[j][i];   
+           }
+       }           
+            
+            return state;
+    } 
+    
+    
+    
+    
+    public String AES128_ECB(String claire, int[] cle ){
+        String chiffre ="";
+        
+        int claireLenght = claire.length();
+ 
+        for(int i = 0; i < 16 - Math.floorMod(claireLenght, 16)+1; i++ )
+        claire = claire + " ";
+        
+          int l = 0;    
+         for(int k=0; k<Math.floorDiv(claireLenght,16);k++ ){
+          int[][] state = new int[4][4];
+          
+          for(int i = 0; i<4; i++ ){
+              for(int j=0;j<4;j++){
+                  state[j][i] =  (int) claire.charAt(l);
+                  l++;
+              }
+         } 
+          
+          state = AES128_Chiffrement(state, cle);
+          
+          for(int i=0; i<4;i++){
+              for(int j = 0; j<4; j++){
+                  chiffre = chiffre + Integer.toHexString(state[j][i])+ " ";
+              }
+          }
+      }
+        
+         int[][] state =  new int[4][4];
+         int i =0;
+         int j=0;
+         for(; i<4 && l <claireLenght;i++){
+            for(; j<4 && l<claireLenght; j++){
+                state[j][i] = (int) claire.charAt(l);
+                l++;
+            }
+        } 
+         
+        
+          for(; i<4 ;i++){
+            for(; j<4 ; j++){
+                state[j][i] =  ' ' ;
+            }
+        } 
+         
+         
+         state = AES128_Chiffrement(state, cle);
+         
+          for(int c=0; c<4;c++){
+              for(int p = 0; p<4; p++){
+                  chiffre = chiffre + Integer.toHexString(state[p][c])+ " ";
+              }
+      }
+          
+          return chiffre;
+         
+    }
+   
+     public String AES128_ECB_decrypte(String chiffre, int[] cle ){
+        String claire ="";
+        
+        int chiffreLength = chiffre.length();
+          
+        int[][] state = new int[4][4];
+        
+        
+        int l=0,m=0; // two index to go through the in construction state
+        
+        int st = 0;
+       for(int i =1; i<chiffreLength; i++)
+       {
+           if(chiffre.charAt(i)==' ' && chiffre.charAt(i-1)!=' '){
+              state[l][m] = Integer.valueOf(chiffre.substring(st, i), 16);
+              l++;
+              if(l==4)
+              {
+                  l=0;
+                  m++;
+              }
+              
+              if(m==4){
+                  state = AES128_Dechiffrement(state, cle);
+                  m=0;
+                  
+                  for(int k=0;k<4; k++ ){
+                      for(int p = 0; p< 4; p++){
+                          claire = claire + String.valueOf((char)state[p][k]);
+                      }
+                  }
+              }
+            
+              
+           } else if(chiffre.charAt(i)!=' ' && chiffre.charAt(i-1)==' '){
+               st = i;
+           }
+       }
+             
+          return claire;
+         
+    }
+     
+    
+     
+     
+     
+     
+     
+     public String AES192_ECB(String claire, int[] cle ){
+        String chiffre ="";
+        
+        int claireLenght = claire.length();
+          
+ 
+       
+          int l = 0;    
+         for(int k=0; k<Math.floorDiv(claireLenght,16);k++ ){
+          int[][] state = new int[4][4];
+          
+          for(int i = 0; i<4; i++ ){
+              for(int j=0;j<4;j++){
+                  state[j][i] =  (int) claire.charAt(l);
+                  l++;
+              }
+         } 
+          
+          state = AES192_Chiffrement(state, cle);
+          
+          for(int i=0; i<4;i++){
+              for(int j = 0; j<4; j++){
+                  chiffre = chiffre + Integer.toHexString(state[j][i])+ " ";
+              }
+          }
+      }
+        
+         int[][] state =  new int[4][4];
+         int i =0;
+         int j=0;
+         for(; i<4 && l <claireLenght;i++){
+            for(; j<4 && l<claireLenght; j++){
+                state[j][i] = (int) claire.charAt(l);
+                l++;
+            }
+        } 
+         
+         if(l==claireLenght){
+          for(; i<4 ;i++){
+            for(; j<4 ; j++){
+                state[j][i] = 0 ;
+            }
+        } 
+         }
+         
+         state = AES192_Chiffrement(state, cle);
+         
+          for(int c=0; c<4;c++){
+              for(int p = 0; p<4; p++){
+                  chiffre = chiffre + Integer.toHexString(state[p][c])+ " ";
+              }
+          }
+          
+          return chiffre;
+         
+    }
+   
+     public String AES192_ECB_decrypte(String chiffre, int[] cle ){
+        String claire ="";
+        
+        int chiffreLength = chiffre.length();
+          
+        int[][] state = new int[4][4];
+        
+        
+        int l=0,m=0; // two index to go through the in construction state
+        
+        int st = 0;
+       for(int i =1; i<chiffreLength; i++)
+       {
+           if(chiffre.charAt(i)==' ' && chiffre.charAt(i-1)!=' '){
+              state[l][m] = Integer.valueOf(chiffre.substring(st, i), 16);
+              l++;
+              if(l==4)
+              {
+                  l=0;
+                  m++;
+              }
+              
+              if(m==4){
+                  state = AES192_Dechiffrement(state, cle);
+                  m=0;
+                  
+                  for(int k=0;k<4; k++ ){
+                      for(int p = 0; p< 4; p++){
+                          claire = claire + String.valueOf((char)state[p][k]);
+                      }
+                  }
+              }
+            
+              
+           } else if(chiffre.charAt(i)!=' ' && chiffre.charAt(i-1)==' '){
+               st = i;
+           }
+       }
+             
+          return claire;
+         
+    }
+     
+     
+     
+     
+     
+     
+     
+     
+     
+      public String AES256_ECB(String claire, int[] cle ){
+        String chiffre ="";
+        
+        int claireLenght = claire.length();
+          
+ 
+       
+          int l = 0;    
+         for(int k=0; k<Math.floorDiv(claireLenght,16);k++ ){
+          int[][] state = new int[4][4];
+          
+          for(int i = 0; i<4; i++ ){
+              for(int j=0;j<4;j++){
+                  state[j][i] =  (int) claire.charAt(l);
+                  l++;
+              }
+         } 
+          
+          state = AES256_Chiffrement(state, cle);
+          
+          for(int i=0; i<4;i++){
+              for(int j = 0; j<4; j++){
+                  chiffre = chiffre + Integer.toHexString(state[j][i])+ " ";
+              }
+          }
+      }
+        
+         int[][] state =  new int[4][4];
+         int i =0;
+         int j=0;
+         for(; i<4 && l <claireLenght;i++){
+            for(; j<4 && l<claireLenght; j++){
+                state[j][i] = (int) claire.charAt(l);
+                l++;
+            }
+        } 
+         
+         if(l==claireLenght){
+          for(; i<4 ;i++){
+            for(; j<4 ; j++){
+                state[j][i] = 0 ;
+            }
+        } 
+         }
+         
+         state = AES256_Chiffrement(state, cle);
+         
+          for(int c=0; c<4;c++){
+              for(int p = 0; p<4; p++){
+                  chiffre = chiffre + Integer.toHexString(state[p][c])+ " ";
+              }
+          }
+          
+          return chiffre;
+         
+    }
+   
+     public String AES256_ECB_decrypte(String chiffre, int[] cle ){
+        String claire ="";
+        
+        int chiffreLength = chiffre.length();
+          
+        int[][] state = new int[4][4];
+        
+        
+        int l=0,m=0; // two index to go through the in construction state
+        
+        int st = 0;
+       for(int i =1; i<chiffreLength; i++)
+       {
+           if(chiffre.charAt(i)==' ' && chiffre.charAt(i-1)!=' '){
+              state[l][m] = Integer.valueOf(chiffre.substring(st, i), 16);
+              l++;
+              if(l==4)
+              {
+                  l=0;
+                  m++;
+              }
+              
+              if(m==4){
+                  state = AES256_Dechiffrement(state, cle);
+                  m=0;
+                  
+                  for(int k=0;k<4; k++ ){
+                      for(int p = 0; p< 4; p++){
+                          claire = claire + String.valueOf((char)state[p][k]);
+                      }
+                  }
+              }
+            
+              
+           } else if(chiffre.charAt(i)!=' ' && chiffre.charAt(i-1)==' '){
+               st = i;
+           }
+       }
+             
+          return claire;
+         
+    }
+     
+
+     
+     
+         public String getHashHex(String password, int bytesLength){
+      
+        StringBuffer hexString = new StringBuffer();
+        
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            
+            //convert the byte to hex format method 2
+            
+            for (int i=0;i<byteData.length && i<bytesLength;i++) {
+                String hex=Integer.toHexString(0xff & byteData[i]);
+                if(hex.length()==1) hexString.append('0');
+                hexString.append(hex);
+                
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(AES.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+           return hexString.toString();
+    }
+         
+         
+    
+          public String getHashBits(String password, int bytesLength){
+      
+        StringBuffer bitsString = new StringBuffer();
+        
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            
+            //convert the byte to hex format method 2
+            
+            for (int i=0;i<byteData.length && i<bytesLength;i++) {
+                String bin=Integer.toBinaryString(0xff & byteData[i]);
+               for(int l=0; l<8-bin.length();l++){
+                   bitsString.append("0");
+               }
+                bitsString.append(bin);        
+            }
+            return bitsString.toString();
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(AES.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+           return bitsString.toString();
+    }
+          
+          
+    public int[] getKeyHash(String password, int bytesLength) throws NoSuchAlgorithmException{
+      
+        int[] hashKey = new int[bytesLength];
+        
+        
+        
+        
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(password.getBytes());
+            
+            byte byteData[] = md.digest();
+            
+            
+            //convert the byte to hex format method 2
+            
+            for (int i=0; i<hashKey.length && i< byteData.length; i++) {
+               hashKey[i] = 0xff & byteData[i];
+                              
+            }
+            
+       
+        
+           return hashKey;
+    }
+
+    
+
+public int[] AesStringToIntKEY(String cle){
+    int cleLenght = cle.length();
+    int bytesNumber = Math.floorDiv(cleLenght, 8);
+    int[] key = new int[bytesNumber];
+    int i;
+    for( i = 0; i<bytesNumber-1; i++){
+        key[i]=Integer.parseInt(cle.substring(i*8, i*8+8),2) ;
+    }
+     key[i]=Integer.parseInt(cle.substring(i*8),2) ;      
+     
+     return key;
+}
+
+
+public String keyToString(int[] cle){
+   String key = "";
+    for(int i = 0; i<cle.length; i++)
+    {   String byteStr = Integer.toBinaryString(cle[i]);
+        for(int j = 0; j < 8-byteStr.length();j++)
+            key = key + "0";
+        key=key + byteStr;
+    }
+    return key;
+}
+
+
+ public String getClipboardContents() {
+    String result = "";
+    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+    //odd: the Object param of getContents is not currently used
+    Transferable contents = clipboard.getContents(null);
+    boolean hasTransferableText =
+      (contents != null) &&
+      contents.isDataFlavorSupported(DataFlavor.stringFlavor)
+    ;
+    if (hasTransferableText) {
+      try {
+        result = (String)contents.getTransferData(DataFlavor.stringFlavor);
+      }
+      catch (UnsupportedFlavorException | IOException ex){
+        System.out.println(ex);
+        ex.printStackTrace();
+      }
+    }
+    return result;
+  }
+
+  
+  
+  
+  
+  
+  
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////:
+  //Arithemetique polynomial
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  
+
+
+
+
+
+
+
+ class Polynome{
+       private
+               
+           int[] poly; 
+           int degree;  
+        
+        public
+        
+          Polynome(int[]Poly, int Degree){
+              poly =Poly;
+              degree=Degree;
+          }       
+          public Polynome(String str) {
+          degree= str.length()-1;
+         
+          poly= new int[degree+1];
+          
+           for(int i = 0;i<=degree;i++)
+          poly[i]=Integer.parseInt(String.valueOf(str.charAt(i)));
+        }
+        
+        public Polynome(int[] pl) {
+          degree= pl.length-1;
+         
+          poly= pl;
+          
+             }
+        
+       public  int[] getPoly(){
+            return poly;
+        }
+                
+     public    int degree(){
+            return degree;
+        }
+
+     public int getCoeficientAt(int i)
+     {
+         return poly[i];
+     }
+     
+     public void setCoeficientAt(int i, int val )
+     {
+         poly[i] = val;
+         
+     }
+     
+     private int isNextPositive(int[] array , int startFrom )
+     {
+         
+         for(int i = startFrom+1; i<array.length; i++)
+         {if(array[i]>0)
+                 return 1;
+         if(array[i]<0)
+             return -1;
+             
+             }
+         return 0;
+     }
+     
+     
+
+     
+     
+     
+     
+         @Override
+      public  String toString(){
+            String str= new String("");
+            int i;
+            if(degree == 0)
+                return String.valueOf(poly[0]);
+            else{
+            
+            for( i  =0; i<degree; i++)
+            {   if(i==0){
+                if(poly[0]!=0){
+                str=str+poly[0];
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, 0)==-1)
+                    str=str+" - ";
+                }
+                else {
+                    if(isNextPositive(poly, 0)==-1)
+                    str=str+" - ";
+            }
+            }
+               
+            
+            else{
+                if(poly[i]==1||poly[i]==-1){
+                str=str+"x^"+i;
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, i)==-1)
+                    str=str+" - ";
+                }
+                else if(poly[i]==0)
+               ;
+                else {
+                str=str+String.valueOf(Math.abs(poly[i]))+".x^"+i;
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, i)==-1)
+                    str=str+" - ";
+                     }
+            }
+            }
+           if(poly[i]==1||poly[i]==-1)
+                str=str+"x^"+i;
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(Math.abs(poly[i]))+".x^"+i;
+            }
+            return str;
+        }
+        
+       public  String toStringV2(){
+            String str= new String("");
+            int i;
+            for( i  =degree; i>=0; i++)
+            {   if(i==0&&poly[0]!=0)
+                  str=str+poly[0];
+                else if(i==1){
+                if(poly[0]==0)
+                str=str+String.valueOf(poly[i])+".x^"+i;
+                else
+                 str=str+String.valueOf(poly[i])+".x^"+i+" + ";
+            }
+                
+            else{
+                if(poly[i]==1)
+                str=str+"x^"+i+" + ";
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(poly[i])+".x^"+i+" + ";
+                }
+            }
+           if(poly[i]==1)
+                str=str+"x^"+i;
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(poly[i])+".x^"+i;
+            
+            return str;
+        }
+
+ private Polynome correctTable(){
+     int lastIndex = 0;
+     for(int i=0;i<=degree;i++)
+     if(poly[i]!=0)
+         lastIndex = i;
+     
+     int[] polyCorrect =new int[lastIndex+1]; 
+     
+     for(int i = 0; i<=lastIndex; i++)
+         polyCorrect[i]=poly[i];
+     
+     degree = lastIndex;
+     poly = polyCorrect;
+     
+   
+     
+     return this; 
+ }      
+         
+            Polynome add(Polynome pl){
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=pl.getPoly()[i]+poly[i];
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]= pl.getPoly()[i];
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]= poly[i];
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();
+         }
+         
+         public Polynome multiply(Polynome pl){
+            int degPlResult = degree+ pl.degree();
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+             
+             int[] resultPoly = new int[degPlResult+1]; 
+              
+             if(degree==minDeg){
+             for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=resultPoly[i]+poly[j]*pl.getPoly()[i-j];
+                 }
+                 
+             }
+             
+             }else{
+                   for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=resultPoly[i]+pl.getPoly()[j]*poly[i-j];
+                 }             
+             }   
+                     }
+                 return new Polynome(resultPoly, degPlResult).correctTable();
+             }
+        
+         public Polynome substract(Polynome pl){
+           int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=poly[i]-pl.getPoly()[i];
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]= -pl.getPoly()[i];
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]= poly[i];
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();  
+         }
+         
+         
+         public Polynome mod(Polynome pl)
+         {   
+             Polynome A = this;
+             Polynome quotient;
+             int[] q;
+             int diffDegree;
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                
+                    return A.substract(pl.multiply(new Polynome(coef))).correctTable();
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                
+                 quotient = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(quotient)).correctTable();
+                     }                 
+             }
+               return A.correctTable();
+            }
+             
+             
+             
+         
+         
+         
+         
+         
+          public Polynome[] divideCouple(Polynome pl)
+         {   
+             if(degree<pl.degree())
+             {   int[] zero = {0};
+                 Polynome[] result = {new Polynome(zero), this };
+             
+                 return result;
+                     
+                     } 
+             else{
+             Polynome A = this;
+             int diffDegree=degree-pl.degree();
+             int[] quot = new int[diffDegree+1];
+             for(int i=0; i<= diffDegree;i++)
+                 quot[i]=0;
+             Polynome quotient = new Polynome(quot);
+             Polynome qut;
+             int[] q;
+             
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                quotient.setCoeficientAt(0,coef[0]);
+                Polynome[] result = {quotient,A.substract(pl.multiply(new Polynome(coef))).correctTable()};
+                    return result ;
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                quotient.setCoeficientAt(diffDegree,A.getCoeficientAt(A.degree()));
+                 qut = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(qut)).correctTable();
+                 
+                     }                 
+             }
+               
+               Polynome[] result = {quotient,A.correctTable()};
+               return result;
+           
+         
+         }
+         }
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          Polynome reduceCoeficient(int modulo){
+              for(int i = 0; i<=degree ; i++)
+                  poly[i] = Math.floorMod(poly[i],modulo);
+              
+              this.correctTable();
+              return this;
+          }
+          
+          
+          
+          Polynome addMod(Polynome pl,int modulo){
+            this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();
+            
+              int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=Math.floorMod(pl.getPoly()[i]+poly[i], modulo);
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]=Math.floorMod(pl.getPoly()[i], modulo) ;
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]=Math.floorMod(poly[i], modulo) ;
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();
+         }
+         
+         public Polynome multiplyModulo(Polynome pl, int modulo){
+           
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();
+             
+             int degPlResult = degree+ pl.degree();
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+             
+             int[] resultPoly = new int[degPlResult+1]; 
+              
+             if(degree==minDeg){
+             for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=Math.floorMod(resultPoly[i]+poly[j]*pl.getPoly()[i-j], modulo);
+                 }
+                 
+             }
+             
+             }else{
+                   for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=Math.floorMod(resultPoly[i]+pl.getPoly()[j]*poly[i-j], modulo);
+                 }             
+             }   
+                     }
+                 return new Polynome(resultPoly, degPlResult).correctTable();
+             }
+        
+         public Polynome substractModulo(Polynome pl, int modulo){
+           
+           
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+             
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=Math.floorMod(poly[i]-pl.getPoly()[i], modulo);
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]=Math.floorMod(-pl.getPoly()[i], modulo) ;
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]=Math.floorMod(poly[i], modulo) ;
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();  
+         }
+         
+         
+         public Polynome modModulo(Polynome pl, int modulo)
+         {   
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+            
+            
+             Polynome A = this;
+             Polynome quotient;
+             int[] q;
+             int diffDegree;
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree() == pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())*BigInteger.valueOf(pl.getCoeficientAt(pl.degree())).modInverse(BigInteger.valueOf(modulo)).intValue()} ;
+                
+                    return A.substract(pl.multiply(new Polynome(coef))).reduceCoeficient(modulo).correctTable();
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree())*BigInteger.valueOf(pl.getCoeficientAt(pl.degree())).modInverse(BigInteger.valueOf(modulo)).intValue();
+                
+                 quotient = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(quotient)).reduceCoeficient(modulo).correctTable();
+                     }                 
+             }
+               return A.reduceCoeficient(modulo).correctTable();
+            }
+             
+             
+             
+         
+         
+         
+         
+         
+          public Polynome[] divideCoupleModulo(Polynome pl, int modulo)
+         {   
+             this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+             
+             if(degree<pl.degree())
+             {   int[] zero = {0};
+                 Polynome[] result = {new Polynome(zero), this };
+             
+                 return result;
+                     
+                     } 
+             else{
+             Polynome A = this;
+             int diffDegree=degree-pl.degree();
+             int[] quot = new int[diffDegree+1];
+             for(int i=0; i<= diffDegree;i++)
+                 quot[i]=0;
+             Polynome quotient = new Polynome(quot);
+             Polynome qut;
+             int[] q;
+             
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())*BigInteger.valueOf(pl.getCoeficientAt(pl.degree())).modInverse(BigInteger.valueOf(modulo)).intValue()} ;
+                quotient.setCoeficientAt(0,coef[0]);
+                Polynome[] result = {quotient.reduceCoeficient(modulo).correctTable(),A.substract(pl.multiply(new Polynome(coef))).reduceCoeficient(modulo).correctTable()};
+                    return result ;
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree())*BigInteger.valueOf(pl.getCoeficientAt(pl.degree())).modInverse(BigInteger.valueOf(modulo)).intValue();
+                quotient.setCoeficientAt(diffDegree,A.getCoeficientAt(A.degree())*BigInteger.valueOf(pl.getCoeficientAt(pl.degree())).modInverse(BigInteger.valueOf(modulo)).intValue());
+                 qut = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(qut)).reduceCoeficient(modulo).correctTable();
+                 
+                     }                 
+             }
+               
+               Polynome[] result = {quotient.reduceCoeficient(modulo).correctTable(),A.correctTable().reduceCoeficient(modulo).correctTable()};
+               return result;
+           
+         
+         }
+         }
+          
+     }
+    
+          public Polynome format2Polynome(String str){
+       int lengthPoly = 0; boolean jForNext = true;
+         for(int i = 0; i<str.length();i++)
+         {
+          if(str.charAt(i)==' '&& i>0 && str.charAt(i-1)!=' ')
+                  
+              lengthPoly++;
+         }
+         if(str.charAt(str.length()-1)!=' ')
+             lengthPoly++;
+         
+         int[] pl = new  int[lengthPoly];
+         int i=0; int j=0; int k=0;
+         for(j=1;j<str.length();j++){
+         
+             if(str.charAt(j)!=' ' && str.charAt(j-1)==' ')
+            i=j;
+             if(str.charAt(j)==' '&& str.charAt(j-1)!=' ')
+             {
+                 pl[k]=Integer.parseInt(str.substring(i, j));
+                 k++;
+                
+             }
+         }
+         
+         if(str.charAt(j-1)!=' ')
+           pl[k]=Integer.parseInt(str.substring(i, j));  
+         
+         return new Polynome(pl);
+     }
+    
+
+	
+	
+	
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//GF(2^m) et AES Arithemetique
+/////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+    public int multiplyPoly2M(int poly1, int poly2) {
+        int result = 0;
+        String binaryFormOfPoly2 = Integer.toBinaryString(poly2);
+        int length = binaryFormOfPoly2.length();
+        for (int i = 0; i < length; i++) {
+            if (binaryFormOfPoly2.charAt(i) == '1') {
+                result = result ^ poly1 << (length - 1 - i); // Xor with shifted left of poly1
+            }
+        }
+        return result;
+    }
+
+    int numOfBitslog2(int value) {
+        return Integer.SIZE - Integer.numberOfLeadingZeros(value);
+    }
+
+    public int reductionGalois2M(int poly, int reductionPoly) {
+        int polynomial = poly;
+        int reductionPolyBitsNum = numOfBitslog2(reductionPoly);
+        int bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                polynomial = polynomial ^ (reductionPoly << bitDiff);
+            } else {
+                polynomial = polynomial ^ reductionPoly;
+            }
+
+            bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+        }
+        return polynomial;
+    }
+
+    public int multiplyGalois2M(int poly1, int poly2, int reductionPoly) {
+        return reductionGalois2M(multiplyPoly2M(poly1, poly2), reductionPoly);
+    }
+
+    public int modGalois(int poly, int polyModulo) {
+        int polynomial = poly;
+        int reductionPolyBitsNum = numOfBitslog2(polyModulo);
+        int bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                polynomial = polynomial ^ (polyModulo << bitDiff);
+            } else {
+                polynomial = polynomial ^ polyModulo;
+            }
+
+            bitDiff = numOfBitslog2(polynomial) - reductionPolyBitsNum;
+        }
+        return polynomial;
+    }
+
+    public int[] modDivGalois(int poly, int polyModulo) {
+        int[] modDiv = new int[2];
+        modDiv[1] = poly; // mod
+        modDiv[0] = 0; // div quotient
+        int reductionPolyBitsNum = numOfBitslog2(polyModulo);
+        int bitDiff = numOfBitslog2(modDiv[1]) - reductionPolyBitsNum;
+
+        while (bitDiff >= 0) {
+            if (bitDiff > 0) {
+                modDiv[1] = modDiv[1] ^ (polyModulo << bitDiff);
+                modDiv[0] = modDiv[0] ^ (1 << bitDiff);
+            } else {
+                modDiv[1] = modDiv[1] ^ polyModulo;
+                modDiv[0] = modDiv[0] ^ (1);
+            }
+            bitDiff = numOfBitslog2(modDiv[1]) - reductionPolyBitsNum;
+        }
+        return modDiv;
+    }
+
+    public int divGalois(int poly1, int poly2) {
+        return modDivGalois(poly1, poly2)[0];
+    }
+
+    int[] EuclideEtenduGalois(int polyA, int polyB) {
+        int[] result = new int[3];
+        if (polyB == 0) {
+            result[0] = polyA; //gcd
+            result[1] = 1;    //x
+            result[2] = 0;   //y
+            return result;
+        } else {
+
+            result = EuclideEtenduGalois(polyB, modGalois(polyA, polyB));
+            int X = result[1];
+            result[1] = result[2];
+            result[2] = X ^ multiplyPoly2M(divGalois(polyA, polyB), result[1]);
+            return result;
+        }
+    }
+
+    public int inverseGalois(int poly, int polyReduction) {
+        return modGalois(EuclideEtenduGalois(poly, polyReduction)[1], polyReduction);
+
+    }
+
+     public int inverseGaloisAES(int poly) {
+  int[] invGlAES  = { 
+0x00 , 0x01 , 0x8D , 0xF6 , 0xCB , 0x52 , 0x7B , 0xD1 , 0xE8 , 0x4F , 0x29 , 0xC0 , 0xB0 , 0xE1 , 0xE5 , 0xC7 , 
+0x74 , 0xB4 , 0xAA , 0x4B , 0x99 , 0x2B , 0x60 , 0x5F , 0x58 , 0x3F , 0xFD , 0xCC , 0xFF , 0x40 , 0xEE , 0xB2 , 
+0x3A , 0x6E , 0x5A , 0xF1 , 0x55 , 0x4D , 0xA8 , 0xC9 , 0xC1 , 0x0A , 0x98 , 0x15 , 0x30 , 0x44 , 0xA2 , 0xC2 , 
+0x2C , 0x45 , 0x92 , 0x6C , 0xF3 , 0x39 , 0x66 , 0x42 , 0xF2 , 0x35 , 0x20 , 0x6F , 0x77 , 0xBB , 0x59 , 0x19 , 
+0x1D , 0xFE , 0x37 , 0x67 , 0x2D , 0x31 , 0xF5 , 0x69 , 0xA7 , 0x64 , 0xAB , 0x13 , 0x54 , 0x25 , 0xE9 , 0x09 , 
+0xED , 0x5C , 0x05 , 0xCA , 0x4C , 0x24 , 0x87 , 0xBF , 0x18 , 0x3E , 0x22 , 0xF0 , 0x51 , 0xEC , 0x61 , 0x17 , 
+0x16 , 0x5E , 0xAF , 0xD3 , 0x49 , 0xA6 , 0x36 , 0x43 , 0xF4 , 0x47 , 0x91 , 0xDF , 0x33 , 0x93 , 0x21 , 0x3B , 
+0x79 , 0xB7 , 0x97 , 0x85 , 0x10 , 0xB5 , 0xBA , 0x3C , 0xB6 , 0x70 , 0xD0 , 0x06 , 0xA1 , 0xFA , 0x81 , 0x82 , 
+0x83 , 0x7E , 0x7F , 0x80 , 0x96 , 0x73 , 0xBE , 0x56 , 0x9B , 0x9E , 0x95 , 0xD9 , 0xF7 , 0x02 , 0xB9 , 0xA4 , 
+0xDE , 0x6A , 0x32 , 0x6D , 0xD8 , 0x8A , 0x84 , 0x72 , 0x2A , 0x14 , 0x9F , 0x88 , 0xF9 , 0xDC , 0x89 , 0x9A , 
+0xFB , 0x7C , 0x2E , 0xC3 , 0x8F , 0xB8 , 0x65 , 0x48 , 0x26 , 0xC8 , 0x12 , 0x4A , 0xCE , 0xE7 , 0xD2 , 0x62 , 
+0x0C , 0xE0 , 0x1F , 0xEF , 0x11 , 0x75 , 0x78 , 0x71 , 0xA5 , 0x8E , 0x76 , 0x3D , 0xBD , 0xBC , 0x86 , 0x57 , 
+0x0B , 0x28 , 0x2F , 0xA3 , 0xDA , 0xD4 , 0xE4 , 0x0F , 0xA9 , 0x27 , 0x53 , 0x04 , 0x1B , 0xFC , 0xAC , 0xE6 , 
+0x7A , 0x07 , 0xAE , 0x63 , 0xC5 , 0xDB , 0xE2 , 0xEA , 0x94 , 0x8B , 0xC4 , 0xD5 , 0x9D , 0xF8 , 0x90 , 0x6B , 
+0xB1 , 0x0D , 0xD6 , 0xEB , 0xC6 , 0x0E , 0xCF , 0xAD , 0x08 , 0x4E , 0xD7 , 0xE3 , 0x5D , 0x50 , 0x1E , 0xB3 , 
+0x5B , 0x23 , 0x38 , 0x34 , 0x68 , 0x46 , 0x03 , 0x8C , 0xDD , 0x9C , 0x7D , 0xA0 , 0xCD , 0x1A , 0x41 , 0x1C };
+      
+return invGlAES[poly] ;
+    }
+    
+    public String inverseTableGeneration(int polyIrreductibleReduction) {
+        int numberOfElement = numOfBitslog2(polyIrreductibleReduction)-1;
+
+        String result = "{ 0x00 , ";
+        int inverse;
+        int k =1;
+        for (int element = 1; element < (int) Math.pow(2, numberOfElement) - 1; element++) {
+         if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            inverse = inverseGalois(element, polyIrreductibleReduction);
+            if(inverse < 16)
+            result = result + "0x0" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT) + " , ";
+          
+         k++;      
+        }
+        inverse = inverseGalois((int) Math.pow(2, numberOfElement) - 1, polyIrreductibleReduction);
+        if(inverse < 16)
+            result = result + "0x0" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(inverse).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+
+    int[] MultiplyMatriceVect(int[][] matrice, int[] vect){
+       int[] resultVect = new int[matrice.length]; // ça taille est le nombre de lignes de la  matrice
+        for(int i = 0; i<matrice.length; i++){ // lignes matrices
+          resultVect[i] = 0;
+            for(int j = 0; j<vect.length; j++) // cologne matrice , vect
+            {
+             resultVect[i] = resultVect[i]+matrice[i][j]*vect[j];   
+            }
+        }
+    return resultVect;
+    }
+    
+    String intToHexStr0x(int num){
+        String result="";
+        if(num < 16)
+            result = result + "0x0" + Integer.toHexString(num).toUpperCase(Locale.ROOT);
+            else 
+            result = result + "0x" + Integer.toHexString(num).toUpperCase(Locale.ROOT);
+    return result;
+    }
+   
+    int AES_SboxAffineTr(int poly){
+      int[] matriceTrAffine = {
+           0xF1 /*<=11110001<={1,0,0,0,1,1,1,1}*/,
+           0xE3 /*<=11100011<={1,1,0,0,0,1,1,1}*/,
+           0xC7 /*<=11000111<={1,1,1,0,0,0,1,1}*/,
+           0x8F /*<=10001111<={1,1,1,1,0,0,0,1}*/,
+           0x1F /*<=00011111<={1,1,1,1,1,0,0,0}*/,
+           0x3E /*<=00111110<={0,1,1,1,1,1,0,0}*/,
+           0x7C /*<=01111100<={0,0,1,1,1,1,1,0}*/,
+           0xF8 /*<=11111000<={0,0,0,1,1,1,1,1}*/ 
+       }; 
+             
+      // int vectTrAffine = 0x63 /*<=01100011<={1,1,0,0,0,1,1,0}*/;
+       int result = 0;
+       
+       for(int i = 0; i<8; i++){
+          if(Math.floorMod(Integer.bitCount(matriceTrAffine[i]&poly), 2)==1)  
+           result = result^(1<<i) ;
+       }
+       
+       result = result ^ 0x63 /*vectTrAffine*/;
+       return result;
+    }
+    
+    int Inv_AES_SboxAffineTr(int poly){
+      int[] matriceTrAffine = {
+           
+
+           0xA4 /*<=10100100<={0,0,1,0,0,1,0,1}*/,
+           0x49 /*<=01001001<={1,0,0,1,0,0,1,0}*/,
+           0x92 /*<=10010010<={0,1,0,0,1,0,0,1}*/,
+           0x25 /*<=00100101<={1,0,1,0,0,1,0,0}*/, 
+           0x4A /*<=01001010<={0,1,0,1,0,0,1,0}*/,
+           0x94 /*<=10010100<={0,0,1,0,1,0,0,1}*/,
+           0x29 /*<=00101001<={1,0,0,1,0,1,0,0}*/,
+           0x52 /*<=01010010<={0,1,0,0,1,0,1,0}*/
+      }; 
+             
+      // int vectTrAffine = 0x05 /*<=00000101<={1,0,1,0,0,0,0,0}*/;
+       int result = 0;
+       
+       for(int i = 0; i<8; i++){
+          if(Math.floorMod(Integer.bitCount(matriceTrAffine[i]&poly), 2)==1)  
+           result = result^(1<<i) ;
+       }
+       
+       result = result ^ 0x05 /*vectTrAffine*/;
+       return result;
+    }
+    
+    
+    /*
+    int Aes_SboxAffineTr(int poly){
+      int[] polyAff = new int[8];
+      String polyStr = Integer.toBinaryString(poly);
+      int lenghtStr = polyStr.length();
+      for(int i =0; i<lenghtStr; i++)
+      {
+          if(polyStr.charAt(i)=='1')
+              polyAff[i] = 1;
+          else 
+              polyAff[i]=0;
+      }
+      
+      for(int i = lenghtStr ; i< 8 ;i++)
+           polyAff[i]=0;
+      
+        int[][] matriceTrAffine = {
+           {1,0,0,0,1,1,1,1},
+           {1,1,0,0,0,1,1,1},
+           {1,1,1,0,0,0,1,1},
+           {1,1,1,1,0,0,0,1},
+           {1,1,1,1,1,0,0,0},
+            {0,1,1,1,1,1,0,0},
+           {0,0,1,1,1,1,1,0},
+          {0,0,0,1,1,1,1,1} 
+       }; 
+             
+      int[] vectTrAffine ={1,1,0,0,0,1,1,0};
+       int[] result = new int[8];
+       
+       for(int i = 0; i<8; i++){
+           result[i]=0;
+           for(int j = 0; j<8;j++)
+          result[i] ^= matriceTrAffine[i][j] & polyAff[j];    
+       }
+       for(int i = 0; i<8; i++)
+       result[i] ^= vectTrAffine[i];
+       
+       int resultInt =result[0];
+       for(int i =1; i<8; i++){
+          if(result[i]==1)
+           resultInt ^= (1<<i);
+       }
+       return resultInt;
+    }
+   */ 
+  public   int AesSbox(int poly){
+     return AES_SboxAffineTr(inverseGalois(poly,283 ));
+  }
+  
+  
+  
+   int[] Sbox   = 
+  { 
+0x63 , 0x7C , 0x77 , 0x7B , 0xF2 , 0x6B , 0x6F , 0xC5 , 0x30 , 0x01 , 0x67 , 0x2B , 0xFE , 0xD7 , 0xAB , 0x76 , 
+0xCA , 0x82 , 0xC9 , 0x7D , 0xFA , 0x59 , 0x47 , 0xF0 , 0xAD , 0xD4 , 0xA2 , 0xAF , 0x9C , 0xA4 , 0x72 , 0xC0 , 
+0xB7 , 0xFD , 0x93 , 0x26 , 0x36 , 0x3F , 0xF7 , 0xCC , 0x34 , 0xA5 , 0xE5 , 0xF1 , 0x71 , 0xD8 , 0x31 , 0x15 , 
+0x04 , 0xC7 , 0x23 , 0xC3 , 0x18 , 0x96 , 0x05 , 0x9A , 0x07 , 0x12 , 0x80 , 0xE2 , 0xEB , 0x27 , 0xB2 , 0x75 , 
+0x09 , 0x83 , 0x2C , 0x1A , 0x1B , 0x6E , 0x5A , 0xA0 , 0x52 , 0x3B , 0xD6 , 0xB3 , 0x29 , 0xE3 , 0x2F , 0x84 , 
+0x53 , 0xD1 , 0x00 , 0xED , 0x20 , 0xFC , 0xB1 , 0x5B , 0x6A , 0xCB , 0xBE , 0x39 , 0x4A , 0x4C , 0x58 , 0xCF , 
+0xD0 , 0xEF , 0xAA , 0xFB , 0x43 , 0x4D , 0x33 , 0x85 , 0x45 , 0xF9 , 0x02 , 0x7F , 0x50 , 0x3C , 0x9F , 0xA8 , 
+0x51 , 0xA3 , 0x40 , 0x8F , 0x92 , 0x9D , 0x38 , 0xF5 , 0xBC , 0xB6 , 0xDA , 0x21 , 0x10 , 0xFF , 0xF3 , 0xD2 , 
+0xCD , 0x0C , 0x13 , 0xEC , 0x5F , 0x97 , 0x44 , 0x17 , 0xC4 , 0xA7 , 0x7E , 0x3D , 0x64 , 0x5D , 0x19 , 0x73 , 
+0x60 , 0x81 , 0x4F , 0xDC , 0x22 , 0x2A , 0x90 , 0x88 , 0x46 , 0xEE , 0xB8 , 0x14 , 0xDE , 0x5E , 0x0B , 0xDB , 
+0xE0 , 0x32 , 0x3A , 0x0A , 0x49 , 0x06 , 0x24 , 0x5C , 0xC2 , 0xD3 , 0xAC , 0x62 , 0x91 , 0x95 , 0xE4 , 0x79 , 
+0xE7 , 0xC8 , 0x37 , 0x6D , 0x8D , 0xD5 , 0x4E , 0xA9 , 0x6C , 0x56 , 0xF4 , 0xEA , 0x65 , 0x7A , 0xAE , 0x08 , 
+0xBA , 0x78 , 0x25 , 0x2E , 0x1C , 0xA6 , 0xB4 , 0xC6 , 0xE8 , 0xDD , 0x74 , 0x1F , 0x4B , 0xBD , 0x8B , 0x8A , 
+0x70 , 0x3E , 0xB5 , 0x66 , 0x48 , 0x03 , 0xF6 , 0x0E , 0x61 , 0x35 , 0x57 , 0xB9 , 0x86 , 0xC1 , 0x1D , 0x9E , 
+0xE1 , 0xF8 , 0x98 , 0x11 , 0x69 , 0xD9 , 0x8E , 0x94 , 0x9B , 0x1E , 0x87 , 0xE9 , 0xCE , 0x55 , 0x28 , 0xDF , 
+0x8C , 0xA1 , 0x89 , 0x0D , 0xBF , 0xE6 , 0x42 , 0x68 , 0x41 , 0x99 , 0x2D , 0x0F , 0xB0 , 0x54 , 0xBB , 0x16 };
+ 
+  public   int AesSboxTbl(int poly){
+        return Sbox[poly];
+  }
+  
+  public   int invAesSbox(int poly){
+     return inverseGalois(Inv_AES_SboxAffineTr(poly),283 );
+  }
+  
+   int[] invSbox =   {
+0x52 , 0x09 , 0x6A , 0xD5 , 0x30 , 0x36 , 0xA5 , 0x38 , 0xBF , 0x40 , 0xA3 , 0x9E , 0x81 , 0xF3 , 0xD7 , 0xFB , 
+0x7C , 0xE3 , 0x39 , 0x82 , 0x9B , 0x2F , 0xFF , 0x87 , 0x34 , 0x8E , 0x43 , 0x44 , 0xC4 , 0xDE , 0xE9 , 0xCB , 
+0x54 , 0x7B , 0x94 , 0x32 , 0xA6 , 0xC2 , 0x23 , 0x3D , 0xEE , 0x4C , 0x95 , 0x0B , 0x42 , 0xFA , 0xC3 , 0x4E , 
+0x08 , 0x2E , 0xA1 , 0x66 , 0x28 , 0xD9 , 0x24 , 0xB2 , 0x76 , 0x5B , 0xA2 , 0x49 , 0x6D , 0x8B , 0xD1 , 0x25 , 
+0x72 , 0xF8 , 0xF6 , 0x64 , 0x86 , 0x68 , 0x98 , 0x16 , 0xD4 , 0xA4 , 0x5C , 0xCC , 0x5D , 0x65 , 0xB6 , 0x92 , 
+0x6C , 0x70 , 0x48 , 0x50 , 0xFD , 0xED , 0xB9 , 0xDA , 0x5E , 0x15 , 0x46 , 0x57 , 0xA7 , 0x8D , 0x9D , 0x84 , 
+0x90 , 0xD8 , 0xAB , 0x00 , 0x8C , 0xBC , 0xD3 , 0x0A , 0xF7 , 0xE4 , 0x58 , 0x05 , 0xB8 , 0xB3 , 0x45 , 0x06 , 
+0xD0 , 0x2C , 0x1E , 0x8F , 0xCA , 0x3F , 0x0F , 0x02 , 0xC1 , 0xAF , 0xBD , 0x03 , 0x01 , 0x13 , 0x8A , 0x6B , 
+0x3A , 0x91 , 0x11 , 0x41 , 0x4F , 0x67 , 0xDC , 0xEA , 0x97 , 0xF2 , 0xCF , 0xCE , 0xF0 , 0xB4 , 0xE6 , 0x73 , 
+0x96 , 0xAC , 0x74 , 0x22 , 0xE7 , 0xAD , 0x35 , 0x85 , 0xE2 , 0xF9 , 0x37 , 0xE8 , 0x1C , 0x75 , 0xDF , 0x6E , 
+0x47 , 0xF1 , 0x1A , 0x71 , 0x1D , 0x29 , 0xC5 , 0x89 , 0x6F , 0xB7 , 0x62 , 0x0E , 0xAA , 0x18 , 0xBE , 0x1B , 
+0xFC , 0x56 , 0x3E , 0x4B , 0xC6 , 0xD2 , 0x79 , 0x20 , 0x9A , 0xDB , 0xC0 , 0xFE , 0x78 , 0xCD , 0x5A , 0xF4 , 
+0x1F , 0xDD , 0xA8 , 0x33 , 0x88 , 0x07 , 0xC7 , 0x31 , 0xB1 , 0x12 , 0x10 , 0x59 , 0x27 , 0x80 , 0xEC , 0x5F , 
+0x60 , 0x51 , 0x7F , 0xA9 , 0x19 , 0xB5 , 0x4A , 0x0D , 0x2D , 0xE5 , 0x7A , 0x9F , 0x93 , 0xC9 , 0x9C , 0xEF , 
+0xA0 , 0xE0 , 0x3B , 0x4D , 0xAE , 0x2A , 0xF5 , 0xB0 , 0xC8 , 0xEB , 0xBB , 0x3C , 0x83 , 0x53 , 0x99 , 0x61 , 
+0x17 , 0x2B , 0x04 , 0x7E , 0xBA , 0x77 , 0xD6 , 0x26 , 0xE1 , 0x69 , 0x14 , 0x63 , 0x55 , 0x21 , 0x0C , 0x7D };
+
+  public   int invAesSboxTbl(int poly){
+   
+  return invSbox[poly];
+  }
+  
+    public String AesSboxTableGeneration() {
+        String result ="{ ";
+        int sBoxElement;
+       int k=0;
+        for (int element = 0; element < 255 ; element++) {
+         if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            
+            sBoxElement = AesSbox(element); //283 = 100011011 = pi(x) AES irreductible polynomial
+            if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+   k++;
+        }
+         sBoxElement = AesSbox(255);
+        if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+   
+    public String invAesSboxTableGeneration() {
+        String result ="{ ";
+        int sBoxElement;
+        int k=0;
+        for (int element = 0; element < 255 ; element++) {
+                       
+      if(k==16){
+             k=0;
+           result = result + "\n";  
+         }
+          
+            
+            sBoxElement = invAesSbox(element); //283 = 100011011 = pi(x) AES irreductible polynomial
+            if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT) + " , ";
+            
+            k++;
+        }
+         sBoxElement = invAesSbox(255);
+        if(sBoxElement < 16)
+            result = result + "0x0" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }" ;
+            else 
+            result = result + "0x" + Integer.toHexString(sBoxElement).toUpperCase(Locale.ROOT)+" }";
+               
+
+        return result;
+
+    }
+    
+    
+   public int[][] AesSubtituteLayer(int[][] state) 
+   {
+       int[][] result = new int[4][4];
+       for(int i = 0; i <4;i++){
+           for(int j = 0;j<4 ; j++){
+               result[i][j] =Sbox[state[i][j]] ; // sBox should be globale
+           }
+       }
+       return result;
+   }
+    
+  public int[][] invAesSubtituteLayer(int[][] state) 
+   {
+       int[][] result = new int[4][4];
+       for(int i = 0; i <4;i++){
+           for(int j = 0;j<4 ; j++){
+               result[i][j] =invSbox[state[i][j]] ; // invSBox should be globale
+           }
+       }
+       return result;
+   }  
+    
+   public int[][]  shiftRowLayer(int[][] state){
+       int[][] result = new int[4][4];
+       //row 1
+        System.arraycopy(state[0], 0, result[0], 0, 4);
+       
+        //row2 (1 shift)
+        System.arraycopy(state[1], 1, result[1], 0, 3);
+       result[1][3] = state[1][0 ];
+     
+       //row3  (2 shifts)
+       System.arraycopy(state[2], 2, result[2], 0, 2);
+       System.arraycopy(state[2], 0, result[2], 2, 2);
+        
+       //row4  (3 shifts)
+       System.arraycopy(state[3], 0, result[3], 1, 3);
+       result[3][0] = state[3][3];
+       
+      return result; 
+   }
+   
+      public int[][]  invShiftRowLayer(int[][] state){
+       int[][] result = new int[4][4];
+       //row 1
+        System.arraycopy(state[0], 0, result[0], 0, 4);
+       
+        //row2 (1 shift)
+        System.arraycopy(state[1], 0, result[1], 1, 3);
+       result[1][0] = state[1][3 ];
+     
+       //row3  (2 shifts)
+       System.arraycopy(state[2], 0, result[2], 2, 2);
+       System.arraycopy(state[2],2, result[2], 0, 2);
+        
+       //row4  (3 shifts)
+       System.arraycopy(state[3], 1, result[3], 0, 3);
+       result[3][3] = state[3][0];
+       
+      return result; 
+   }
+      
+      int[] mixColumn(int[] column){
+          int[] result = new int[4];
+         result[0]= reductionGalois2M(column[0]<<1,  0x11B) ^ reductionGalois2M((column[1]<<1)^column[1], 0x11B)^column[2]^column[3];
+      
+          result[1]=column[0]^ reductionGalois2M(column[1]<<1, 0x11B) ^ reductionGalois2M((column[2]<<1)^column[2], 0x11B)^column[3];
+     
+          result[2]=column[0]^column[1]^ reductionGalois2M(column[2]<<1, 0x11B) ^ reductionGalois2M((column[3]<<1)^column[3], 0x11B);
+      
+          result[3]=reductionGalois2M((column[0]<<1)^column[0], 0x11B)^column[1]^column[2]^ reductionGalois2M(column[3]<<1, 0x11B);
+          
+          /* 
+          result[0]= multiplyGalois2M(column[0], 0x02, 0x11B) ^ multiplyGalois2M(column[1], 0x03, 0x11B)^column[2]^column[3];
+      
+          result[1]=column[0]^ multiplyGalois2M(column[1], 0x02, 0x11B) ^ multiplyGalois2M(column[2], 0x03, 0x11B)^column[3];
+     
+          result[2]=column[0]^column[1]^ multiplyGalois2M(column[2], 0x02, 0x11B) ^ multiplyGalois2M(column[3], 0x03, 0x11B);
+      
+          result[2]=multiplyGalois2M(column[0], 0x03, 0x11B)^column[1]^column[2]^ multiplyGalois2M(column[3], 0x02, 0x11B);
+          */
+          
+          return result;
+      }
+      
+      int[] invMixColumn(int[] column){
+          int[] result = new int[4];
+          
+          
+          result[0]= multiplyGalois2M(column[0], 0x0E, 0x11B) ^ multiplyGalois2M(column[1], 0x0B, 0x11B)^multiplyGalois2M(column[2], 0x0D, 0x11B)^multiplyGalois2M(column[3], 0x09, 0x11B);
+      
+          result[1]=multiplyGalois2M(column[0], 0x09, 0x11B)^ multiplyGalois2M(column[1], 0x0E, 0x11B) ^ multiplyGalois2M(column[2], 0x0B, 0x11B)^multiplyGalois2M(column[3], 0x0D, 0x11B);
+     
+          result[2]=multiplyGalois2M(column[0], 0x0D, 0x11B)^multiplyGalois2M(column[1], 0x09, 0x11B)^ multiplyGalois2M(column[2], 0x0E, 0x11B) ^ multiplyGalois2M(column[3], 0x0B, 0x11B);
+      
+          result[3]=multiplyGalois2M(column[0], 0x0B, 0x11B)^multiplyGalois2M(column[1], 0x0D, 0x11B)^multiplyGalois2M(column[2], 0x09, 0x11B)^ multiplyGalois2M(column[3], 0x0E, 0x11B);
+          
+          
+          return result;
+      }
+      
+      
+       int[][] mixColumnLayer(int[][] state){
+           int[][]  result = new int[4][4];
+           int[] mixColumn;
+           
+           mixColumn = mixColumn(new int[]{state[0][0],state[1][0],state[2][0],state[3][0]});
+           for(int i = 0; i<4; i++){
+             result[i][0] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][1],state[1][1],state[2][1],state[3][1]});
+           for(int i = 0; i<4; i++){
+             result[i][1] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][2],state[1][2],state[2][2],state[3][2]});
+           for(int i = 0; i<4; i++){
+             result[i][2] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][3],state[1][3],state[2][3],state[3][3]});
+           for(int i = 0; i<4; i++){
+             result[i][3] = mixColumn[i];  
+           }
+           
+          return result; 
+       }
+       
+       int[][] invMixColumnLayer(int[][] state){
+           int[][]  result = new int[4][4];
+           int[] mixColumn;
+           
+           mixColumn = mixColumn(new int[]{state[0][0],state[1][0],state[2][0],state[3][0]});
+           for(int i = 0; i<4; i++){
+             result[i][0] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][1],state[1][1],state[2][1],state[3][1]});
+           for(int i = 0; i<4; i++){
+             result[i][1] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][2],state[1][2],state[2][2],state[3][2]});
+           for(int i = 0; i<4; i++){
+             result[i][2] = mixColumn[i];  
+           }
+           
+           mixColumn = mixColumn(new int[]{state[0][3],state[1][3],state[2][3],state[3][3]});
+           for(int i = 0; i<4; i++){
+             result[i][3] = mixColumn[i];  
+           }
+           
+          return result; 
+       }
+       
+       
+       //////////////////////
+       int[] RC = {0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
+     public int[] fonctionG(int[] vect, int index){
+         int[] result ={vect[1],vect[2],vect[3],vect[0]};
+         
+         result[0] = Sbox[result[0]]^RC[index-1];
+         result[1] = Sbox[result[1]];
+         result[2] = Sbox[result[2]];
+         result[3] = Sbox[result[3]];
+         
+         return result;
+     }
+     ///////////////////////////////
+     
+     
+     public int[] wordXOR(int[] word1, int[] word2){
+        return new int[]{(word1[0]^word2[0]),(word1[1]^word2[1]),(word1[2]^word2[2]),(word1[3]^word2[3])};
+     } 
+     
+
+
+      class Polynome{
+       private
+               
+           int[] poly; 
+           int degree;  
+        
+        public
+        
+          Polynome(int[]Poly, int Degree){
+              poly =Poly;
+              degree=Degree;
+          }       
+          public Polynome(String str) {
+          degree= str.length()-1;
+         
+          poly= new int[degree+1];
+          
+           for(int i = 0;i<=degree;i++)
+          poly[i]=Integer.parseInt(String.valueOf(str.charAt(degree-i)));
+        }
+        
+        public Polynome(int[] pl) {
+          degree= pl.length-1;
+         
+          poly= pl;
+          
+             }
+        
+       public  int[] getPoly(){
+            return poly;
+        }
+                
+     public    int degree(){
+            return degree;
+        }
+
+     public int getCoeficientAt(int i)
+     {
+         return poly[i];
+     }
+     
+     public void setCoeficientAt(int i, int val )
+     {
+         poly[i] = val;
+         
+     }
+     
+     private int isNextPositive(int[] array , int startFrom )
+     {
+         
+         for(int i = startFrom+1; i<array.length; i++)
+         {if(array[i]>0)
+                 return 1;
+         if(array[i]<0)
+             return -1;
+             
+             }
+         return 0;
+     }
+     
+     
+
+     
+     
+     
+     
+         @Override
+      public  String toString(){
+            String str= new String("");
+            int i;
+            if(degree == 0)
+                return String.valueOf(poly[0]);
+            else{
+            
+            for( i  =0; i<degree; i++)
+            {   if(i==0){
+                if(poly[0]!=0){
+                str=str+poly[0];
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, 0)==-1)
+                    str=str+" - ";
+                }
+                else {
+                    if(isNextPositive(poly, 0)==-1)
+                    str=str+" - ";
+            }
+            }
+               
+            
+            else{
+                if(poly[i]==1||poly[i]==-1){
+                str=str+"x^"+i;
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, i)==-1)
+                    str=str+" - ";
+                }
+                else if(poly[i]==0)
+               ;
+                else {
+                str=str+String.valueOf(Math.abs(poly[i]))+".x^"+i;
+                if(isNextPositive(poly, i)==1)
+                    str=str+" + ";
+                else if(isNextPositive(poly, i)==-1)
+                    str=str+" - ";
+                     }
+            }
+            }
+           if(poly[i]==1||poly[i]==-1)
+                str=str+"x^"+i;
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(Math.abs(poly[i]))+".x^"+i;
+            }
+            return str;
+        }
+        
+       public  String toStringV2(){
+            String str= new String("");
+            int i;
+            for( i  =degree; i>=0; i++)
+            {   if(i==0&&poly[0]!=0)
+                  str=str+poly[0];
+                else if(i==1){
+                if(poly[0]==0)
+                str=str+String.valueOf(poly[i])+".x^"+i;
+                else
+                 str=str+String.valueOf(poly[i])+".x^"+i+" + ";
+            }
+                
+            else{
+                if(poly[i]==1)
+                str=str+"x^"+i+" + ";
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(poly[i])+".x^"+i+" + ";
+                }
+            }
+           if(poly[i]==1)
+                str=str+"x^"+i;
+                else if(poly[i]==0)
+               ;
+                else 
+                str=str+String.valueOf(poly[i])+".x^"+i;
+            
+            return str;
+        }
+
+ private Polynome correctTable(){
+     int lastIndex = 0;
+     for(int i=0;i<=degree;i++)
+     if(poly[i]!=0)
+         lastIndex = i;
+     
+     int[] polyCorrect =new int[lastIndex+1]; 
+     
+     for(int i = 0; i<=lastIndex; i++)
+         polyCorrect[i]=poly[i];
+     
+     degree = lastIndex;
+     poly = polyCorrect;
+     
+   
+     
+     return this; 
+ }      
+         
+            Polynome add(Polynome pl){
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=pl.getPoly()[i]+poly[i];
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]= pl.getPoly()[i];
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]= poly[i];
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();
+         }
+         
+         public Polynome multiply(Polynome pl){
+            int degPlResult = degree+ pl.degree();
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+             
+             int[] resultPoly = new int[degPlResult+1]; 
+              
+             if(degree==minDeg){
+             for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=resultPoly[i]+poly[j]*pl.getPoly()[i-j];
+                 }
+                 
+             }
+             
+             }else{
+                   for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=resultPoly[i]+pl.getPoly()[j]*poly[i-j];
+                 }             
+             }   
+                     }
+                 return new Polynome(resultPoly, degPlResult).correctTable();
+             }
+        
+         public Polynome substract(Polynome pl){
+           int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=poly[i]-pl.getPoly()[i];
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]= -pl.getPoly()[i];
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]= poly[i];
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();  
+         }
+         
+         
+         public Polynome mod(Polynome pl)
+         {   
+             Polynome A = this;
+             Polynome quotient;
+             int[] q;
+             int diffDegree;
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                
+                    return A.substract(pl.multiply(new Polynome(coef))).correctTable();
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                
+                 quotient = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(quotient)).correctTable();
+                     }                 
+             }
+               return A.correctTable();
+            }
+             
+             
+             
+         
+         
+         
+         
+         
+          public Polynome[] divideCouple(Polynome pl)
+         {   
+             if(degree<pl.degree())
+             {   int[] zero = {0};
+                 Polynome[] result = {new Polynome(zero), this };
+             
+                 return result;
+                     
+                     } 
+             else{
+             Polynome A = this;
+             int diffDegree=degree-pl.degree();
+             int[] quot = new int[diffDegree+1];
+             for(int i=0; i<= diffDegree;i++)
+                 quot[i]=0;
+             Polynome quotient = new Polynome(quot);
+             Polynome qut;
+             int[] q;
+             
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                quotient.setCoeficientAt(0,coef[0]);
+                Polynome[] result = {quotient,A.substract(pl.multiply(new Polynome(coef))).correctTable()};
+                    return result ;
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                quotient.setCoeficientAt(diffDegree,A.getCoeficientAt(A.degree()));
+                 qut = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(qut)).correctTable();
+                 
+                     }                 
+             }
+               
+               Polynome[] result = {quotient,A.correctTable()};
+               return result;
+           
+         
+         }
+         }
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          Polynome reduceCoeficient(int modulo){
+              for(int i = 0; i<=degree ; i++)
+                  poly[i] = Math.floorMod(poly[i],modulo);
+              
+              this.correctTable();
+              return this;
+          }
+          
+          
+          
+          Polynome addMod(Polynome pl,int modulo){
+            this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();
+            
+              int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=Math.floorMod(pl.getPoly()[i]+poly[i], modulo);
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]=Math.floorMod(pl.getPoly()[i], modulo) ;
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]=Math.floorMod(poly[i], modulo) ;
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();
+         }
+         
+         public Polynome multiplyModulo(Polynome pl, int modulo){
+           
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();
+             
+             int degPlResult = degree+ pl.degree();
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+             
+             int[] resultPoly = new int[degPlResult+1]; 
+              
+             if(degree==minDeg){
+             for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=Math.floorMod(resultPoly[i]+poly[j]*pl.getPoly()[i-j], modulo);
+                 }
+                 
+             }
+             
+             }else{
+                   for(int i =0; i<=degPlResult ; i++){
+              resultPoly[i]=0;
+                 for(int j =0;j<=Math.min(i, minDeg);j++){
+                 if(i-j<=maxDeg)
+                     resultPoly[i]=Math.floorMod(resultPoly[i]+pl.getPoly()[j]*poly[i-j], modulo);
+                 }             
+             }   
+                     }
+                 return new Polynome(resultPoly, degPlResult).correctTable();
+             }
+        
+         public Polynome substractModulo(Polynome pl, int modulo){
+           
+           
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+             
+             int minDeg =Math.min(pl.degree, degree);
+             int maxDeg = Math.max(pl.degree, degree); 
+                     
+             int[] resultPoly = new int[maxDeg+1];
+             
+             for(int i =0; i<= minDeg ;i++)
+             {
+                 resultPoly[i]=Math.floorMod(poly[i]-pl.getPoly()[i], modulo);
+             }
+             
+             if(minDeg == degree)
+             {
+                 for (int i=minDeg+1; i<=maxDeg;i++){
+                     resultPoly[i]=Math.floorMod(-pl.getPoly()[i], modulo) ;
+                 }
+             }           
+             
+             else{
+                       for (int i=minDeg+1; i<=maxDeg;i++){
+                        resultPoly[i]=Math.floorMod(poly[i], modulo) ;
+                        }
+                 }
+             return new Polynome(resultPoly, maxDeg).correctTable();  
+         }
+         
+         
+         public Polynome modModulo(Polynome pl, int modulo)
+         {   
+              this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+            
+            
+             Polynome A = this;
+             Polynome quotient;
+             int[] q;
+             int diffDegree;
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree() == pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                
+                    return A.substract(pl.multiply(new Polynome(coef))).reduceCoeficient(modulo).correctTable();
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                
+                 quotient = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(quotient)).reduceCoeficient(modulo).correctTable();
+                     }                 
+             }
+               return A.reduceCoeficient(modulo).correctTable();
+            }
+             
+             
+             
+         
+         
+         
+         
+         
+          public Polynome[] divideCoupleModulo(Polynome pl, int modulo)
+         {   
+             this.reduceCoeficient(modulo);
+            pl.reduceCoeficient(modulo);
+           
+            this.correctTable();
+            pl.correctTable();  
+             
+             if(degree<pl.degree())
+             {   int[] zero = {0};
+                 Polynome[] result = {new Polynome(zero), this };
+             
+                 return result;
+                     
+                     } 
+             else{
+             Polynome A = this;
+             int diffDegree=degree-pl.degree();
+             int[] quot = new int[diffDegree+1];
+             for(int i=0; i<= diffDegree;i++)
+                 quot[i]=0;
+             Polynome quotient = new Polynome(quot);
+             Polynome qut;
+             int[] q;
+             
+                 
+               while(A.degree() >= pl.degree()){
+                     if(A.degree()==pl.degree()){
+                int[] coef = {A.getCoeficientAt(A.degree())} ;
+                quotient.setCoeficientAt(0,coef[0]);
+                Polynome[] result = {quotient.reduceCoeficient(modulo).correctTable(),A.substract(pl.multiply(new Polynome(coef))).reduceCoeficient(modulo).correctTable()};
+                    return result ;
+                     
+                     }
+                     else{
+             diffDegree= A.degree()-pl.degree();
+               
+                     q=new int[diffDegree+1];
+              
+                     for(int i = 0;i<diffDegree;i++)
+                    q[i]=0;
+                
+                q[diffDegree]=A.getCoeficientAt(A.degree());
+                quotient.setCoeficientAt(diffDegree,A.getCoeficientAt(A.degree()));
+                 qut = new Polynome(q);
+                 
+                 A=A.substract(pl.multiply(qut)).reduceCoeficient(modulo).correctTable();
+                 
+                     }                 
+             }
+               
+               Polynome[] result = {quotient.reduceCoeficient(modulo).correctTable(),A.correctTable().reduceCoeficient(modulo).correctTable()};
+               return result;
+           
+         
+         }
+         }
+          
+     }
+    
+          public Polynome format2Polynome(String str){
+       int lengthPoly = 0; boolean jForNext = true;
+         for(int i = 0; i<str.length();i++)
+         {
+          if(str.charAt(i)==' '&& i>0 && str.charAt(i-1)!=' ')
+                  
+              lengthPoly++;
+         }
+         if(str.charAt(str.length()-1)!=' ')
+             lengthPoly++;
+         
+         int[] pl = new  int[lengthPoly];
+         int i=0; int j=0; int k=0;
+         for(j=1;j<str.length();j++){
+         
+             if(str.charAt(j)!=' ' && str.charAt(j-1)==' ')
+            i=j;
+             if(str.charAt(j)==' '&& str.charAt(j-1)!=' ')
+             {
+                 pl[k]=Integer.parseInt(str.substring(i, j));
+                 k++;
+                
+             }
+         }
+         
+         if(str.charAt(j-1)!=' ')
+           pl[k]=Integer.parseInt(str.substring(i, j));  
+         
+         return new Polynome(pl);
+     }
+    
+    
+          int[] mixColumnsVectorFromString(String vectStr){
+              int startIndex = 0;
+              int k = 0;
+              int[] vect = new int[4];
+              int i =1; // very important to put to 1
+              for( ; i< vectStr.length() && k<4; i++){
+                  if(vectStr.charAt(i)==' ' && vectStr.charAt(i-1)!=' '){
+                      vect[k]= Integer.parseInt(vectStr.substring(startIndex, i), 2);
+                      k++;
+                  } 
+                  else if(vectStr.charAt(i)!=' ' && vectStr.charAt(i-1)==' ')
+                  {
+                      startIndex = i;
+                  }
+              }
+              
+              if(k==3&& vectStr.charAt(i-1)!=' '){
+                  vect[k]= Integer.parseInt(vectStr.substring(startIndex),2);
+              }
+              return vect;
+          }
+
+          String VectorToString(int[] vect, int radix){
+          String result = "" ;
+              for(int i =0; i<vect.length; i++){
+                  result = result + Integer.toString(vect[i], radix);
+              }
+              
+              return result;
+          }
+          
+           String VectorToString(int[] vect){
+          String result = "" ;
+              for(int i =0; i<vect.length; i++){
+                  result = result + Integer.toString(vect[i])+" ";
+              }
+              
+              return result;
+          }
